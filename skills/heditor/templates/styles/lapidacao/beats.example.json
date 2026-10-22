@@ -1,0 +1,399 @@
+{
+ "_comment": "Example from the reference edit (PT-BR speech). Every key maps an event to [spoken token, after_seconds]; rewrite all of them from your words-reviewed.json. Text fields override build.TEXT_DEFAULTS.",
+ "keys": {
+  "tab": [
+   "sistema",
+   1.4
+  ],
+  "freeze": [
+   "não",
+   3.4
+  ],
+  "cursor": [
+   "abrir",
+   4.4
+  ],
+  "close": [
+   "código",
+   5.4
+  ],
+  "spot_punch": [
+   "sério",
+   6.9
+  ],
+  "plaque1": [
+   "dois",
+   7.6
+  ],
+  "plaque2": [
+   "primeiros",
+   8.0
+  ],
+  "plaque_sheen": [
+   "passos",
+   8.5
+  ],
+  "glyph1": [
+   "nenhuma",
+   11.8
+  ],
+  "cut1": [
+   "código",
+   12.8
+  ],
+  "glyph2": [
+   "etapa",
+   13.5
+  ],
+  "cut2": [
+   "técnica",
+   14.2
+  ],
+  "step1": [
+   "primeiro",
+   15.5
+  ],
+  "sheet": [
+   "abro",
+   16.4
+  ],
+  "caret": [
+   "escrevo",
+   18.5
+  ],
+  "line1": [
+   "tudo",
+   19.1
+  ],
+  "line2": [
+   "ideia",
+   21.0
+  ],
+  "line3": [
+   "levantamentos",
+   22.0
+  ],
+  "line4": [
+   "requisitos",
+   22.9
+  ],
+  "line5": [
+   "especificações",
+   23.7
+  ],
+  "lines_end": [
+   "daquele",
+   24.5
+  ],
+  "compact": [
+   "chamo",
+   25.7
+  ],
+  "land": [
+   "bruto",
+   26.6
+  ],
+  "step2": [
+   "segundo",
+   27.9
+  ],
+  "riser": [
+   "passo",
+   28.7
+  ],
+  "laser": [
+   "refinar",
+   29.6
+  ],
+  "shards": [
+   "bruto",
+   31.0
+  ],
+  "flash": [
+   "gerar",
+   31.7
+  ],
+  "title": [
+   "prd",
+   32.8
+  ],
+  "subtitle": [
+   "product",
+   33.8
+  ],
+  "doc": [
+   "documento",
+   36.5
+  ],
+  "row2": [
+   "especificar",
+   37.4
+  ],
+  "rows_dim": [
+   "detalhes",
+   39.7
+  ],
+  "row3": [
+   "técnicos",
+   40.2
+  ],
+  "row4": [
+   "implementações",
+   40.9
+  ],
+  "machine": [
+   "então",
+   42.4
+  ],
+  "machine_on": [
+   "entrar",
+   43.3
+  ],
+  "pill": [
+   "inteligência",
+   43.8
+  ],
+  "tasks": [
+   "executar",
+   44.9
+  ],
+  "code": [
+   "gerar",
+   47.1
+  ],
+  "loupe": [
+   "revisar",
+   48.5
+  ],
+  "stamp": [
+   "ia",
+   49.7
+  ],
+  "tray": [
+   "resumo",
+   50.7
+  ],
+  "tray_in": [
+   "básico",
+   51.5
+  ],
+  "tray_title": [
+   "workflow",
+   52.2
+  ],
+  "niches": [
+   "5",
+   56.3
+  ],
+  "tray_sheen": [
+   "rápido",
+   58.1
+  ],
+  "cert": [
+   "sistemas",
+   59.7
+  ],
+  "cert1": [
+   "profissionais",
+   60.0
+  ],
+  "cert2": [
+   "escaláveis",
+   60.9
+  ],
+  "cert3": [
+   "stack",
+   62.2
+  ],
+  "cert_seal": [
+   "ponta",
+   62.8
+  ],
+  "case": [
+   "workflow",
+   63.9
+  ],
+  "case_open": [
+   "coisas",
+   66.6
+  ],
+  "case_gem": [
+   "ensino",
+   67.2
+  ],
+  "case_glow": [
+   "pacote",
+   68.2
+  ],
+  "case_seal": [
+   "black",
+   68.9
+  ],
+  "forever": [
+   "acesso",
+   70.25
+  ],
+  "flicker": [
+   "mas",
+   71.25
+  ],
+  "slam": [
+   "atenção",
+   71.45
+  ],
+  "tag": [
+   "condição",
+   72.95
+  ],
+  "flip": [
+   "revelar",
+   73.75
+  ],
+  "tag_time": [
+   "7",
+   75.65
+  ],
+  "tag_note": [
+   "aula",
+   76.75
+  ],
+  "rope": [
+   "somente",
+   77.55
+  ],
+  "vip_plate": [
+   "grupo",
+   79.75
+  ],
+  "vip_sheen": [
+   "vip",
+   80.15
+  ],
+  "cta": [
+   "acessar",
+   81.35
+  ],
+  "button": [
+   "saiba",
+   83.45
+  ],
+  "rope_open": [
+   "entrar",
+   84.35
+  ],
+  "bell": [
+   "ativar",
+   85.55
+  ],
+  "toggle": [
+   "notificações",
+   85.95
+  ],
+  "envelope": [
+   "daqui",
+   86.65
+  ],
+  "envelope_seal": [
+   "informações",
+   87.95
+  ],
+  "fin": [
+   "dia",
+   89.35
+  ],
+  "fin_line": [
+   "link",
+   90.25
+  ],
+  "final_punch": [
+   "ver",
+   91.45
+  ]
+ },
+ "text": {
+  "hook": [
+   "A PRIMEIRA COISA",
+   "QUE EU FAÇO"
+  ],
+  "raw_label": "PROMPT BRUTO",
+  "gem_title": "PRD",
+  "gem_sub": [
+   "PRODUCT REQUIREMENT",
+   "DOCUMENT"
+  ],
+  "rows": [
+   "REQUISITOS",
+   "ESPECIFICAÇÕES",
+   "DETALHES TÉCNICOS",
+   "IMPLEMENTAÇÃO"
+  ],
+  "cert_rows": [
+   "PROFISSIONAL",
+   "ESCALÁVEL",
+   "STACK DE PONTA"
+  ],
+  "case_seal": [
+   "BLACK NOVEMBER",
+   ""
+  ],
+  "tag_date": "05/11",
+  "tag_time": "19H30",
+  "tag_note": "AULA ESPECIAL",
+  "vip": "GRUPO VIP"
+ },
+ "floor": [
+  [
+   "p1",
+   "SEM CÓDIGO"
+  ],
+  [
+   "step1",
+   "PROMPT BRUTO"
+  ],
+  [
+   "step2",
+   "PRD"
+  ],
+  [
+   "machine",
+   "IA"
+  ],
+  [
+   "tray",
+   "5 PASSOS"
+  ],
+  [
+   "cert",
+   "STACK DE PONTA"
+  ],
+  [
+   "case",
+   "BLACK NOVEMBER"
+  ],
+  [
+   "tag",
+   "05/11"
+  ],
+  [
+   "cta",
+   "GRUPO VIP"
+  ]
+ ],
+ "allowed_numbers": [
+  "01",
+  "02",
+  "03",
+  "04",
+  "05",
+  "19",
+  "30",
+  "11"
+ ],
+ "music": {
+  "main": "music:126",
+  "drop": 48.0,
+  "cta": "m179",
+  "cta_src": 28.0
+ },
+ "max_duration": 100
+}

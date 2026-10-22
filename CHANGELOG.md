@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.7.0 — 2026-10-21
+- **New named style `lapidacao` (luxury jewellery commercial) with a runnable reference build**
+  (`heditor new <work> <video> --style lapidacao` + `beats.json`, example in `templates/styles/lapidacao/`): the tool
+  everyone starts with is closed and the room goes dark on a declared pause; under a cool spotlight on a black void the
+  raw material is typed live and sucked into a rough stone, refining it is the cut (laser, facets, sparks, flash), the
+  result is the gem with its parts named; the machine comes in only then and a jeweller's loupe reviews its work; a
+  display tray locks the unsaid steps, a certificate grades the result, the offer case opens and slams shut on the
+  warning, a sealed tag carries the spoken date, a velvet rope opens on the "Learn more" button. Mixed with the `presence` profile
+  (2.6.0) plus the style's own targets; default score `music:126` with its kick entry on the gem flash and Mixkit m179
+  for the CTA (presence-band share ≥ 0.24; a bass-only bed failed the presence floor in the reference edit).
+- `scripts/reelkit/lapidacao_kit.py`: neutral-cool grade, presenter matte at 720 px with clamped levels and a static
+  garbage mask from the median face (merged with the full-resolution RGB), rig states from the face, soft-edged object
+  photos (+ a dull "raw" stone), synthesised SFX and the Mixkit tracks/SFX downloaded once into
+  `~/.heditor/assets/lapidacao` with provenance. Object photos are generated per cut (prompts in `OBJECT_PROMPTS`);
+  none ship with heditor.
+- Style file with pitfalls from production (matte background not zero, accessories class keeps the glasses, hard source
+  edges, floor glow edges, raw stone that already looked cut, joining two takes of the same phrase, a bed too low),
+  style pack (long form), INDEX, SKILL, README (PT/EN), long-form row, idea bank.
+
 ## 2.6.0 — 2026-10-21
 - **Mix profiles** (`plan["mix"]`, `rk.MIX_PROFILES`, `rk.mix_targets`): `voice` (default; organic Reels, class
   excerpts: music ~21.5 dB under the voice) and `presence` (paid ads, creative mode, trailer: music ~15 dB under,

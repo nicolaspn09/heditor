@@ -351,6 +351,23 @@ STYLES = {
         "font_note": "Tilt Neon (OFL) for the signs",
         "music": {"ids": [293, 31, 597, 623], "mood": "urgent, nocturnal"},
     },
+    "lapidacao": {
+        "name": "Lapidação (luxury jewellery commercial)", "family": "ad",
+        "palette": {"bg": "#050506", "bg2": "#0b0c10", "surface": "#111217", "text": "#eef3f7", "muted": "#9aa3b2",
+                    "accent": "#edc580", "accent2": "#dce8ff", "alert": "#ff5f57", "ok": "#edc580"},
+        "fonts": {"display": "Geist", "caption": "Geist", "mono": "JetBrains Mono"},
+        "captions": {"weight": 800, "case": "upper", "box": None, "active_fg": "#000000", "active_bg": "#f3d79b"},
+        "frame": {"border": "1px solid rgba(237,197,128,.45)", "camera_radius": 20,
+                  "world": "radial-gradient(ellipse 120% 70% at 50% 30%,#0b0c10 0%,#050506 55%,#020203 100%)"},
+        "transition": {"kind": "flash", "dur": 0.3, "ease": "power2.out"},
+        "chapter_card": "slate", "lower_third": "plate",
+        "sfx": {"chapter": "lock_click", "callout": "magic_sparkle", "set_piece": "trailer_hit", "transition": "whoosh"},
+        "music": {"ids": [568, 167, 623], "mood": "driving electronic that builds to a drop on the reveal; louder bed"},
+        "long_notes": "Chapters as objects under a spotlight on black velvet: the raw material of the chapter drops as "
+                      "a rough stone, the explanation is the cut (laser, facets, flash) and the result is the gem with "
+                      "its parts named; a jeweller's loupe reviews screen recordings; keep the case/tag/rope set "
+                      "pieces for the offer chapter only.",
+    },
     "manual-de-montagem": {
         "name": "Manual de montagem (assembly blueprint)", "family": "ad",
         "palette": {"bg": "#0a2c6e", "bg2": "#0f3f95", "accent": "#ffd84d", "accent2": "#ffffff", "ok": "#4ade80"},
