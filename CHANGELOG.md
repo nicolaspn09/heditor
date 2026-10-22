@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.8.0 — 2026-10-22
+- **New named style `reacao` (the speaker in front of the post) with a runnable reference build**
+  (`heditor new <work> <video> --style reacao` + `beats.json`, example in `templates/styles/reacao/`): from a raw take
+  where the speaker only talks about a news item or a post, the speaker is cut out (matte) and placed at the bottom of
+  the frame in front of the subject, which fills the frame behind him as a virtual green screen. The subject is a
+  screenshot, a captured page, a screen recording or a region of the same recording, static or moving: each shot sets
+  a focus that is pushed in, scrolled and panned on the spoken words (with a slow drift on holds); boxes, highlighter,
+  underline and hand-drawn circles appear on the exact word with labels from the speech; a lime highlighter headline
+  opens on frame 0, white title cards name the subject, a credit chip names the source, source switches swipe or
+  flash, the speaker jumps between seven states (center, right, left, small, low, hero, punch) and the CTA freezes his
+  last frame under a profile card with Follow → Following.
+- `scripts/reelkit/reacaokit.py`: `speaker_cutout` (matte at 720 px merged with the full-resolution camera, class 5
+  kept so glasses stay opaque), `region_clip` (another region of the source cut with the cut's EDL, frame for frame),
+  `external_clip`, `image_backdrop`, `fill_layer` (blurred cover copy), `capture` (Playwright page screenshot, mobile
+  or desktop, full page, lazy images, cookie walls dismissed), `view` (focus → transform that never leaves an empty
+  band), `speaker_states` (from the median face), `freeze_alpha`.
+- CLI: `heditor capture <url> <out.png>` and `heditor region <work> <name> <crop>`.
+- Unit tests `test_reacao.py` (geometry, EDL-synced region) in CI; style file, style pack (long form), INDEX, SKILL,
+  README (PT/EN), long-form row, troubleshooting (glasses in class 5, 24 fps default of the base prepare template,
+  bands behind landscape recordings, caption word spacing under a heavy stroke, videos without id).
+
 ## 2.7.0 — 2026-10-21
 - **New named style `lapidacao` (luxury jewellery commercial) with a runnable reference build**
   (`heditor new <work> <video> --style lapidacao` + `beats.json`, example in `templates/styles/lapidacao/`): the tool

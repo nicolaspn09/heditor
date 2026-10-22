@@ -198,6 +198,7 @@ fonts, card kind, transition) designed for that video, plus custom set pieces.
 | `bancada` | creator | Geist, `#ffffff` text | editorial / tag / cut | Demos: whip pan from face to screen at each proof; callout set pieces (zoom + label) on the screen share. |
 | `duelo` | creator | Geist, `#000000` on `#ffd84d` | editorial / tag / cut | A/B comparison chapters in side layout; vote CTA. |
 | `manchete` | creator | Geist, `#ffffff` text | broadcast / tag / cut | Reactions: subject on the screen share, speaker beside/below; headline banner per chapter. |
+| `reacao` | layers | Geist, `#ffd84d` active word | app / tag / slide | Reviews and reactions: the subject full-bleed with the speaker cut out in front at the bottom corner; callouts drawn on the subject; each chapter swipes to its source with a credit chip. |
 | `revista` | creator | Geist, `#c6ff3d` text | editorial / tag / cut | Structured classes: each chapter a spread (keyword + italic serif), icon chips, full-frame breathers. |
 
 Notes on the most used packs:

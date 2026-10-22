@@ -1,0 +1,413 @@
+{
+ "sources": {
+  "screen": {
+   "kind": "region",
+   "crop": "crop=1362:1194:50:156"
+  }
+ },
+ "credits": [
+  [
+   0,
+   "fal.ai"
+  ],
+  [
+   [
+    "lançou",
+    11.5
+   ],
+   "fal.live"
+  ],
+  [
+   [
+    "basta",
+    47.5
+   ],
+   "fal.ai"
+  ]
+ ],
+ "hook": {
+  "lines": [
+   "Um modelo de IA que gera vídeo",
+   "mais rápido do que você",
+   "consegue assistir"
+  ],
+  "until": [
+   "Esse",
+   5
+  ],
+  "y": 690
+ },
+ "shots": [
+  {
+   "at": 0,
+   "source": "screen",
+   "focus": [
+    470,
+    430,
+    1000
+   ],
+   "anchor_y": 820,
+   "speaker": "center",
+   "moves": [
+    {
+     "at": [
+      "MiniMax",
+      6
+     ],
+     "focus": [
+      470,
+      360,
+      980
+     ],
+     "anchor_y": 700,
+     "dur": 0.7
+    },
+    {
+     "at": [
+      "olha",
+      8
+     ],
+     "focus": [
+      300,
+      140,
+      760
+     ],
+     "anchor_y": 620,
+     "dur": 0.8
+    }
+   ]
+  },
+  {
+   "at": [
+    "lançou",
+    11.5
+   ],
+   "source": "screen",
+   "enter": "flash",
+   "focus": [
+    681,
+    560,
+    1362
+   ],
+   "anchor_y": 760,
+   "speaker": "right",
+   "moves": [
+    {
+     "at": [
+      "tempo",
+      18
+     ],
+     "focus": [
+      681,
+      544,
+      1120
+     ],
+     "anchor_y": 700,
+     "dur": 0.8,
+     "min_bottom": 1120
+    },
+    {
+     "at": [
+      "telespectadores",
+      23
+     ],
+     "focus": [
+      681,
+      1040,
+      1100
+     ],
+     "anchor_y": 600,
+     "dur": 0.9,
+     "min_bottom": 1150
+    },
+    {
+     "at": [
+      "processando",
+      35
+     ],
+     "focus": [
+      540,
+      400,
+      1240
+     ],
+     "anchor_y": 560,
+     "dur": 0.8,
+     "min_bottom": 1300,
+     "max_top": 230
+    },
+    {
+     "at": [
+      "infinito",
+      38
+     ],
+     "focus": [
+      681,
+      544,
+      940
+     ],
+     "anchor_y": 700,
+     "dur": 0.7
+    },
+    {
+     "at": [
+      "canais",
+      42
+     ],
+     "focus": [
+      681,
+      560,
+      1362
+     ],
+     "anchor_y": 760,
+     "dur": 0.7
+    }
+   ],
+   "speaker_moves": [
+    [
+     [
+      "telespectadores",
+      23
+     ],
+     "small"
+    ],
+    [
+     [
+      "processando",
+      35
+     ],
+     "left"
+    ],
+    [
+     [
+      "infinito",
+      38
+     ],
+     "center"
+    ],
+    [
+     [
+      "canais",
+      42
+     ],
+     "left"
+    ]
+   ]
+  },
+  {
+   "at": [
+    "basta",
+    47.5
+   ],
+   "source": "screen",
+   "enter": "flash",
+   "focus": [
+    671,
+    561,
+    1300
+   ],
+   "anchor_y": 740,
+   "speaker": "center",
+   "moves": [
+    {
+     "at": [
+      "atualizado",
+      56
+     ],
+     "focus": [
+      671,
+      561,
+      1060
+     ],
+     "anchor_y": 700,
+     "dur": 0.9
+    }
+   ],
+   "speaker_moves": [
+    [
+     [
+      "atualizado",
+      56
+     ],
+     "hero"
+    ]
+   ]
+  }
+ ],
+ "marks": [
+  {
+   "at": [
+    "MiniMax",
+    6
+   ],
+   "until": [
+    "olha",
+    8
+   ],
+   "source": "screen",
+   "kind": "box",
+   "rect": [
+    26,
+    312,
+    892,
+    84
+   ],
+   "label": "MiniMax H3 Max"
+  },
+  {
+   "at": [
+    "fal.ai",
+    9
+   ],
+   "until": [
+    "usando",
+    10.5
+   ],
+   "source": "screen",
+   "kind": "circle",
+   "rect": [
+    22,
+    398,
+    74,
+    34
+   ]
+  },
+  {
+   "at": [
+    "gerando",
+    19
+   ],
+   "until": [
+    "telespectadores",
+    23
+   ],
+   "source": "screen",
+   "kind": "box",
+   "rect": [
+    160,
+    250,
+    1042,
+    588
+   ],
+   "label": "em tempo real"
+  },
+  {
+   "at": [
+    "votar",
+    25
+   ],
+   "until": [
+    "Então",
+    28
+   ],
+   "source": "screen",
+   "kind": "box",
+   "rect": [
+    180,
+    900,
+    1003,
+    292
+   ],
+   "label": "votação"
+  },
+  {
+   "at": [
+    "votar",
+    31
+   ],
+   "until": [
+    "cenas",
+    33.5
+   ],
+   "source": "screen",
+   "kind": "circle",
+   "rect": [
+    188,
+    909,
+    488,
+    115
+   ]
+  },
+  {
+   "at": [
+    "votados",
+    36
+   ],
+   "until": [
+    "infinito",
+    38
+   ],
+   "source": "screen",
+   "kind": "underline",
+   "rect": [
+    79,
+    140,
+    900,
+    32
+   ],
+   "label": "os mais votados",
+   "label_side": "bottom"
+  }
+ ],
+ "titles": [
+  {
+   "at": [
+    "live",
+    15
+   ],
+   "until": [
+    "onde",
+    17.5
+   ],
+   "kicker": "fal.live",
+   "title": "Uma live de vídeos <em>gerada por IA</em>"
+  },
+  {
+   "at": [
+    "canais",
+    42
+   ],
+   "until": [
+    "basta",
+    47.5
+   ],
+   "kicker": "fal.live",
+   "title": "Vários <em>canais</em>"
+  },
+  {
+   "at": [
+    "grande",
+    52
+   ],
+   "until": [
+    "pra",
+    56.5
+   ],
+   "kicker": "opinião",
+   "title": "Um grande <em>lançamento</em>"
+  }
+ ],
+ "punches": [
+  [
+   "infinita",
+   39.5,
+   1.12,
+   0.9
+  ],
+  [
+   "virada",
+   53,
+   1.1,
+   0.8
+  ]
+ ],
+ "cta": {
+  "kind": "follow",
+  "line": "Mais atualizações e vídeos como esse"
+ },
+ "music": {
+  "main": "music:187",
+  "drop": 23.0,
+  "gain_db": 2
+ },
+ "max_duration": 75
+}

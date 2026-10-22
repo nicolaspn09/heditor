@@ -617,6 +617,23 @@ STYLES = {
         "music": {"ids": [293, 597, 82], "mood": "hot take"},
         "long_notes": "Reaction videos: the subject (screen) on top, the speaker below; headline banner per chapter.",
     },
+    "reacao": {
+        "name": "Reação (the speaker in front of the post)", "family": "layers",
+        "palette": {"bg": "#0b0b0f", "bg2": "#16161c", "text": "#ffffff", "accent": "#2f6bff", "accent2": "#d8ff3e",
+                    "alert": "#ff3b30"},
+        "fonts": {"display": "Geist", "body": "Inter", "caption": "Geist"},
+        "captions": {"weight": 900, "case": "none", "box": None, "stroke": "6px #000000", "fg": "#ffffff",
+                     "active_fg": "#ffd84d", "active_bg": None},
+        "frame": {"camera_shape": "cutout", "border": "0 solid transparent", "screen_radius": 18,
+                  "shadow": "0 30px 90px rgba(0,0,0,.55)"},
+        "transition": {"kind": "slide", "dur": 0.34, "ease": "power3.out"},
+        "chapter_card": "app", "lower_third": "tag",
+        "sfx": {"chapter": "swipe", "callout": "pen_write", "lower_third": "pop", "transition": "swipe"},
+        "music": {"ids": [187, 82, 293, 597], "mood": "reaction, launch"},
+        "long_notes": "Reactions and reviews of a page, post or demo: the subject full-bleed (screen share or "
+                      "capture) with the speaker cut out in front at the bottom corner; callouts drawn on the "
+                      "subject on their words; each chapter swipes to its source with a credit chip.",
+    },
     "revista": {
         "name": "Revista (editorial spreads)", "family": "creator",
         "palette": {"bg": "#17171b", "bg2": "#1f1f25", "text": "#f3efe6", "muted": "#d9d4c7", "accent": "#c6ff3d",

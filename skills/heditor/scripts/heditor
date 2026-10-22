@@ -62,6 +62,10 @@ case "$cmd" in
            "$PY" "$KIT/music_profile.py" "$@" ;;
   matte|depth|look|hands|plane) # layered / 2.5D helpers (depthkit); see references/depth-and-3d.md
            [[ "$cmd" == plane ]] || need_work "${1:-}"; "$PY" "$KIT/layers.py" "$cmd" "$@" ;;
+  capture) # heditor capture <url> <out.png> [--desktop] [--dark] [--viewport] [...] -> page screenshot (style reacao)
+           "$PY" "$KIT/reacaokit.py" capture "$@" ;;
+  region)  # heditor region <work> <name> <crop=w:h:x:y> [filters] -> a region of the source cut with the cut's EDL
+           need_work "${1:-}"; "$PY" "$KIT/reacaokit.py" region "$@" ;;
   svg)     # heditor svg <in.svg> [out.svg] [static|draw|morph] -> SVGO clean-up + visual check (references/gsap-craft.md)
            "$PY" "$KIT/svgkit.py" "$@" ;;
   physics) # heditor physics <work> <scene.json> [name] -> baked rigid-body sim (references/physics-3d.md)
@@ -78,7 +82,7 @@ heditor - creative video editing for AI agents (vertical Reels and long-form vid
   heditor styles                                         list the named styles
   heditor probe <video> [t...]                           frames to locate the speaker/camera
   heditor transcribe <video> <start> <dur> <out.json>    word-timed ASR of a window (use 0 and full length for all)
-  heditor new <work> [video] [--style nativo]            scaffold a cut (prepare.py, build.py, DESIGN.md)
+  heditor new <work> [video] [--style nativo|reacao|...] scaffold a cut (prepare.py, build.py, DESIGN.md)
   heditor prepare <work>                                 cut speech + camera from the source (runs prepare.py)
   heditor words <work> [prompt]                          ASR of the assembled cut -> words.json/words-reviewed.json
   heditor gaps <work> [max_s]                            dead air left in the cut (fails if a pause > 0.45 s)
@@ -103,6 +107,11 @@ Layered / 2.5D (depthkit, see references/depth-and-3d.md):
   heditor look <work> fog|edges|edges-rgb|dots [#hex]     depth fog, contour scan, edge scan, point cloud
   heditor hands <work> [t0] [t1]                         hand landmarks -> qa/hands-<t0>.json
   heditor plane <w> <h> x1,y1 x2,y2 x3,y3 x4,y4           CSS matrix3d pinning a w x h element onto 4 points
+
+Backdrops for the style reacao (the speaker in front of the post; see references/styles/reacao.md):
+  heditor capture <url> <out.png> [--desktop] [--dark] [--viewport] [--width N] [--height N] [--scale S]
+                  [--wait s] [--selector CSS] [--hide CSS,CSS]   screenshot of a public page (full page by default)
+  heditor region <work> <name> <crop=w:h:x:y> [filters]  the post inside the raw recording, same EDL -> bd-<name>.mp4
 
 Motion assets (see references/gsap-craft.md and references/physics-3d.md):
   heditor svg <in.svg> [out.svg] [static|draw|morph]     SVGO clean-up for DrawSVG/MorphSVG + visual diff check
