@@ -11,15 +11,19 @@
   opens on frame 0, white title cards name the subject, a credit chip names the source, source switches swipe or
   flash, the speaker jumps between seven states (center, right, left, small, low, hero, punch) and the CTA freezes his
   last frame under a profile card with Follow → Following.
-- `scripts/reelkit/reacaokit.py`: `speaker_cutout` (matte at 720 px merged with the full-resolution camera, class 5
-  kept so glasses stay opaque), `region_clip` (another region of the source cut with the cut's EDL, frame for frame),
-  `external_clip`, `image_backdrop`, `fill_layer` (blurred cover copy), `capture` (Playwright page screenshot, mobile
-  or desktop, full page, lazy images, cookie walls dismissed), `view` (focus → transform that never leaves an empty
-  band), `speaker_states` (from the median face), `freeze_alpha`.
+- `scripts/reelkit/reacaokit.py`: `speaker_cutout` (matte at 720 px merged with the camera at ≤ 1080 px, class 5
+  kept so glasses stay opaque, each stage cached with its parameters; a 1440 px alpha crashed the render Chrome on a
+  4-core/8 GB host), `region_clip` (another region of the source cut with the cut's EDL, frame for frame),
+  `external_clip`, `image_backdrop`, `fill_layer` (blurred cover copy), `last_frame` (held under a video backdrop
+  for the CTA), `capture` (Playwright page screenshot, mobile or desktop, full page, lazy images, cookie walls
+  dismissed), `view` (focus → transform that covers the width and the top and reaches `min_bottom`, with `max_top`),
+  `speaker_states` (the median face placed per state, body never above y 1600), `speaker_top`, `freeze_alpha`.
+- The build writes `qa/marks.json` and warns about marks at the frame sides, above y 200 or behind the head.
 - CLI: `heditor capture <url> <out.png>` and `heditor region <work> <name> <crop>`.
 - Unit tests `test_reacao.py` (geometry, EDL-synced region) in CI; style file, style pack (long form), INDEX, SKILL,
   README (PT/EN), long-form row, troubleshooting (glasses in class 5, 24 fps default of the base prepare template,
-  bands behind landscape recordings, caption word spacing under a heavy stroke, videos without id).
+  bands behind landscape recordings, caption word spacing under a heavy stroke, videos without id, render Chrome
+  crash with a large alpha video).
 
 ## 2.7.0 — 2026-10-21
 - **New named style `lapidacao` (luxury jewellery commercial) with a runnable reference build**
