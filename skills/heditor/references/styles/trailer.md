@@ -125,8 +125,8 @@ ghosts; keep wall words above chest height where the matte is solid; show the ma
 - **Placement rule**: every hit starts after the last word and its tail ends before the next line (trim `length`); a
   sound whose peak comes late (logo intros, horns, swells) is scheduled at `hit - peak` only if that start is silent,
   otherwise pick a fast-attack sound.
-- **Louder bed when the user asks**: `plan["mix"] = {"music_median_db": -15, "bed_p95_db": -7, "within_10db_pct": 30,
-  "music_duck": .62, "low_duck": .35, "sfx_duck": .6, "sfx_offset_db": -4}` (read by `rk.mix` and the test), and
+- **Louder bed**: `plan["mix"] = "presence"` (since 2.6.0 the same values the approved trailer used: music −15 dB,
+  p95 −7 dB, < 30 % within 10 dB, ducks .62/.35/.6, SFX offset −4; read by `rk.mix` and the tests), and
   `plan["duck_open"]` = the pauses, so hits and swells land at full level. Inspect the 400 ms windows that still break
   the gate and fix the sound causing them (usually a tail running into the next line).
 

@@ -1,5 +1,27 @@
 # Changelog
 
+## 2.6.0 — 2026-10-21
+- **Mix profiles** (`plan["mix"]`, `rk.MIX_PROFILES`, `rk.mix_targets`): `voice` (default; organic Reels, class
+  excerpts: music ~21.5 dB under the voice) and `presence` (paid ads, creative mode, trailer: music ~15 dB under,
+  background p95 −7 dB, ducks .62/.35/.6, SFX offset −4, +4 dB make-up on `muffled`/`lowpass` sections,
+  `asr-check` required). `"presence"`, `{"profile": "presence", ...}` or `plan["mix_profile"]`; legacy dicts
+  without `"profile"` keep overriding the voice profile. Born from a creative-mode ad whose bed (quiet intro,
+  16 s muffled underwater, −21.5 dB) read as "no music" while every gate passed.
+- **Presence floor:** `rk.mix` measures the bed's presence band (500 Hz–6 kHz, after ducking, `rk.presence_levels`)
+  in 400 ms windows inside the speech, outside `silence` sections; runs under voice median + floor (−48 dB voice,
+  −38 dB presence), merged across peeks < 1.2 s (`rk.music_gaps`), go to `balance.music_gaps`; new test
+  `test_music_presence` fails a run longer than 8 s (voice) or 2 s (presence). `balance` also reports
+  `mix_profile`, `music_presence_pct`, `long_filtered_sections` and `asr_check_required`. Thresholds calibrated on
+  the real case (vanished bed −44 to −58 dB, present bed −28 to −36 dB).
+- **asr-check:** word-timed comparison lists `MASKED` spans (words the clean voice had and the mix lost) with times,
+  writes `pass`, exits 1 when master similarity < 0.90 or more than 0.03 below the voice. `finalize` prints the
+  required next step for the presence profile. `test_voice_first_balance` reads the profile targets.
+- **`heditor music <music:ID|file> [out.json]`** (`music_profile.py`): tempo, energy per second, kick/bass bar,
+  breakdowns, kick entries and lifts, to place each section's `src` so the track's turns land on the speech turns.
+- Docs: sound-design (profiles, floor, track profiling, masking check), quality-gates, kit-api, workflow, creative
+  mode, paid-ad variant, trailer style, SKILL non-negotiables; template `build.py` exposes `MIX`.
+- CI runs the new unit tests (`test_mix.py`).
+
 ## 2.5.3 — 2026-10-21
 - setup.sh: requires Node.js 22 or newer (HyperFrames 0.8.x declares `engines.node >= 22`); before, a Node 18 or 20
   install passed the check and could fail later at preview or render. On apt it installs Node 22 from NodeSource.

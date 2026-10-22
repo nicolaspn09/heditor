@@ -5,8 +5,31 @@ Sound is half of the edit, and the voice is always the protagonist.
 ## Voice
 `rk.prepare_voice` chain: `adeclip` → high-pass 85 Hz → adaptive `afftdn` → -2.5 dB @ 250 Hz (mud) → +2.5 dB @ 3.2 kHz (presence) → de-esser → compressor 3:1 → limiter. Never time-stretch or pitch the speech.
 
+## Mix profiles (`plan["mix"]`, read by `rk.mix` and the tests)
+
+Pick the profile by the kind of delivery, not by taste:
+
+| Profile | When | Music vs voice (median) | Background p95 | Filtered make-up | Presence floor | asr-check |
+|---|---|---|---|---|---|---|
+| `voice` (default) | organic Reels, class excerpts, dense explanations, `nativo` with music | −21.5 dB | −12 dB | 0 dB | bed may not vanish > 8 s | recommended |
+| `presence` | paid ads, creative mode, trailer | −15 dB | −7 dB | +4 dB on `muffled`/`lowpass` | bed may not vanish > 2 s | **required** |
+
+- `plan["mix"] = "presence"` or `{"profile": "presence", <overrides>}`; a dict without `"profile"` overrides the voice
+  profile (plans made before 2.6.0 keep working). `rk.mix_targets(plan)` returns the resolved values.
+- Why two profiles: a 21.5 dB bed under a dense class explanation is right (louder beds there were rejected for
+  covering the speech), but the same level under a paid ad or a creative edit reads as "there is no music" — twice in
+  production (a trailer and a creative-mode ad), both fixed only by the presence values.
+- **Presence floor** (`test_music_presence`): the bed's presence band (500 Hz–6 kHz, after ducking: what the ear
+  hears as "the track" over a voice) is measured in 400 ms windows inside the speech, outside sections declared as
+  `silence`. Runs under voice median + floor (−48 dB voice, −38 dB presence) are merged across peeks shorter than
+  1.2 s and listed in `balance.music_gaps`; a run longer than the profile's limit fails the test. A quiet intro and a
+  16 s muffled underwater section measured −44 to −58 dB (read as "no music"); a bed that read as present sat at
+  −28 to −36 dB.
+- `balance.long_filtered_sections` lists `muffled`/`lowpass` sections longer than 3 s: a filtered bed loses the band
+  the ear tracks over speech; keep them short in ads (a dive, a breath) or the floor fails.
+
 ## Mix targets (`rk.mix`, reported in `qa/balance.json`)
-- Music ≈ 21.5 dB under the voice (median of 400 ms windows with speech).
+- Music ≈ 21.5 dB under the voice in the `voice` profile, ≈ 15 dB in `presence` (median of 400 ms windows with speech).
 - Background (music + SFX) ≥ 12 dB under the voice at p95; < 5 % of windows within 10 dB.
 - Ducking anticipates speech by ~120 ms and holds ~650 ms, so the bed does not pump between words.
 - Multiband ducking: bands above 200 Hz duck fully, bass ducks less (keeps the music present without masking).
@@ -21,6 +44,12 @@ Sound is half of the edit, and the voice is always the protagonist.
 - Licensed sounds only: the catalog (Mixkit) or files the user provides with a licence. Synthesised sounds (noise bursts, sine beeps, radio crackle made with numpy) are fine; add them through a `sfx_lib()` function in build.py.
 
 ## Music
+**Profile the track before choosing `src`:** `heditor music <music:ID|file> [out.json]` prints the tempo, energy per
+second, a kick/bass bar, breakdowns (≥ 4 s without kick), kick entries and lifts. Put the track's own turns on the
+speech turns: section `src = event_s − word_s` (kick entry on the first beat of a montage, a breakdown under a
+suspense line with the kick returning on the reveal word, phase kept across a short silence by adding the gap to
+`src`). Measured, not listened: say so.
+
 Catalog (`assets/catalog.json`, `music:<id>`; Mixkit Free License):
 
 | id | Title | Mood |
@@ -51,4 +80,12 @@ Section design (the emotional arc):
 - Development: `radio`/`lowpass`/`muffled` versions keep energy without competing with the explanation.
 - Before the turn: 0.2–0.4 s of `silence` (with a riser or tape stop), then the drop on the key word.
 - Payoff and CTA: full track, crescendo, fade out 1 s.
+- In `presence` edits a filtered section is a short colour (a dive, a phone speaker), not a long state; the rhythm
+  should keep running under the whole speech.
+
+## Masking check (`heditor asr-check`)
+ASR of the final mix against the clean voice: master similarity ≥ 0.90 and not more than 0.03 below the voice, exit 1
+otherwise. It lists `MASKED` spans (words the clean voice had and the mix lost, with times): dip the bed only there
+(split the music section and give the middle part a lower `gain_db`, keeping `src` continuous) or move the SFX to a
+gap. Required in the `presence` profile (finalize reminds you).
 - A second track can take over at a mood change (tension → hope), with a 0.5–1 s fade.

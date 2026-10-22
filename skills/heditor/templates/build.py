@@ -19,6 +19,7 @@ CTA = 4.5
 HOOK = ""          # on-screen hook for the first seconds; must reflect the spoken hook (empty = first caption)
 QUESTION = ""      # comment question for the CTA (empty = brand default)
 SEED = 20261013
+MIX = "voice"      # "presence" for paid ads and creative mode (sound-design.md: mix profiles)
 
 
 def load():
@@ -143,7 +144,8 @@ def build(track, drop_s):
     (WORK / "composition/index.html").write_text(markup)
     plan = {"duration": k["duration"], "voice_end": voice_end, "keys": k, "captions": caps,
             "sound_events": sound_events(k), "music": music_plan(k, track, drop_s),
-            "music_ref": [k.get("emph1", 0.0), k["voice_end"]], "cta_boost_db": 5}
+            "music_ref": [k.get("emph1", 0.0), k["voice_end"]], "cta_boost_db": 5,
+            "mix": MIX}
     (WORK / "plan.json").write_text(json.dumps(plan, ensure_ascii=False, indent=2))
     (WORK / "captions.json").write_text(json.dumps(caps, ensure_ascii=False, indent=2))
     return plan

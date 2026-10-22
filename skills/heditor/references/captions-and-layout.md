@@ -33,6 +33,7 @@ Several styles place the speaker *inside* the world (in front of a stage screen,
 - If the edge still fails, fall back to a well-designed card or window inside the world (the `album` style was born from that fallback).
 
 ## Paid-ad variant ("Learn more" CTA)
+- Mix: `plan["mix"] = "presence"` (music ~15 dB under the voice, presence floor, asr-check required; `sound-design.md`).
 Ads that run with the platform's own CTA button (Meta Reels/Stories "Learn more" / "Saiba mais") need a different safe area: the ad UI covers more of the lower screen than an organic Reel.
 - Captions sit higher: one line (`nowrap`), ≤ 800 px wide, inside y 1046–1150, font size fitted to the line length (`--fs`). Nothing critical below y 1152; that area is atmosphere only (floor, sea, audience silhouettes, body fading out).
 - Titles still start at y ≥ 300; the face stays clear of every graphic.

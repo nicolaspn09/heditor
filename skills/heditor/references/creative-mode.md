@@ -10,7 +10,7 @@ The reference standard came from a real batch: seven class excerpts, each rebuil
 2. **The speech drives the world.** Every beat of the argument becomes an event in the world (an error pops, a level is unlocked, a plane is cleared for take-off). Pick the world because the speech already contains it as a latent metaphor.
 3. **The camera is a character.** Never just a rectangle: it lives inside the world (a monitor in a tower, a webcam bubble, a game character window, a CCTV feed, a video call) and reacts (zoom on jump cuts, colour shifts, glitches, shrinking to PiP, switching off).
 4. **Captions belong to the world** (dialog box, code comment, radio transmission, chat bubble, film subtitle, karaoke) and stay perfectly readable.
-5. **Sound is half of the edit.** Every visual action has a sound; music has an arc (tension → release, filtered → full, silence before the drop) chosen for emotion, always under the voice.
+5. **Sound is half of the edit.** Every visual action has a sound; music has an arc (tension → release, filtered → full, silence before the drop) chosen for emotion, always under the voice. Creative edits and paid ads use the `presence` mix profile (`plan["mix"] = "presence"`): a rhythmic bed felt the whole time, the track's turns (`heditor music`) on the speech turns, filtered sections kept short, `heditor asr-check` passing.
 6. **Surprise every 1.5–2 seconds** without noise: a state change, a reveal, a camera move, a sound gesture. Pattern interrupts at each turn of the argument.
 7. **A payoff.** The last spoken line lands with the biggest moment (typographic finale, take-off, level up, credits), then a CTA designed inside the world.
 

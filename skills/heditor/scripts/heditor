@@ -58,6 +58,8 @@ case "$cmd" in
   finalize) # heditor finalize <work_dir> <final_name.mp4> [auto|t1,t2,...]
            need_work "${1:-}"; "$PY" "$KIT/finalize.py" "$1" "$2" "${3:-auto}" ;;
   asr-check) need_work "${1:-}"; "$PY" "$KIT/asr_check.py" "$1" ;;
+  music)   # heditor music <music:ID|track.mp3> [out.json] -> tempo, energy, kick entries, breakdowns, lifts
+           "$PY" "$KIT/music_profile.py" "$@" ;;
   matte|depth|look|hands|plane) # layered / 2.5D helpers (depthkit); see references/depth-and-3d.md
            [[ "$cmd" == plane ]] || need_work "${1:-}"; "$PY" "$KIT/layers.py" "$cmd" "$@" ;;
   svg)     # heditor svg <in.svg> [out.svg] [static|draw|morph] -> SVGO clean-up + visual check (references/gsap-craft.md)
@@ -80,13 +82,14 @@ heditor - creative video editing for AI agents (vertical Reels and long-form vid
   heditor prepare <work>                                 cut speech + camera from the source (runs prepare.py)
   heditor words <work> [prompt]                          ASR of the assembled cut -> words.json/words-reviewed.json
   heditor gaps <work> [max_s]                            dead air left in the cut (fails if a pause > 0.45 s)
-  heditor produce <work> <music:ID|file> <drop_s>        build composition + voice-first mix (runs build.py)
+  heditor produce <work> <music:ID|file> <drop_s>        build composition + mix (profile voice|presence; runs build.py)
   heditor lint <work>                                    HyperFrames lint (must be 0 errors)
   heditor preview <work> <t1,t2,...> [sheet.jpg]         frame previews + contact sheet in <work>/qa
   heditor test <work>                                    integrity tests (captions, CTA, balance, numbers)
   heditor render <work> [workers]                        render MP4 with HyperFrames
   heditor finalize <work> <name.mp4>                     mux master audio + verification + 40-frame sheet
-  heditor asr-check <work>                               ASR of final mix vs clean voice (masking check)
+  heditor asr-check <work>                               ASR of final mix vs clean voice (masking check, MASKED spans; exit 1 on fail)
+  heditor music <music:ID|file> [out.json]               track profile: bpm, energy/s, kick entries, breakdowns, lifts
 
 Formats and long form (classes, lives, YouTube; see references/long-form.md):
   heditor formats                                        format profiles (9:16, 16:9, 16:9-4k, 1:1, 4:5)

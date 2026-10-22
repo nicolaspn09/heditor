@@ -138,6 +138,8 @@ def main():
     (WORK / "qa/final-verification.json").write_text(json.dumps(result, ensure_ascii=False, indent=2))
     print(json.dumps({k: v for k, v in result.items() if k not in ("probe",)}, ensure_ascii=False, indent=1))
     print(json.dumps(probe))
+    if result["balance"].get("asr_check_required"):
+        print(f"NEXT (required, mix profile {result['balance'].get('mix_profile')}): heditor asr-check {WORK}")
 
 
 if __name__ == "__main__":

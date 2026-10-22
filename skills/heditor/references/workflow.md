@@ -56,7 +56,9 @@ heditor produce <work> music:955 30        # track and drop second inside the tr
 ```
 `heditor produce` must regenerate `voice-master.wav` from the current `voice-raw.wav`, including when a revision is cloned from an earlier project. Checking only whether the normalized file exists can mix the old, longer speech into the new camera and captions and truncate the ending. Compare both WAV durations against `plan.voice_end` before rendering; the revision integrity test enforces this. After muxing, also transcribe the final spoken sentence separately if full-length ASR omits it.
 
-Read `balance`: `music_minus_voice_median_db ≤ -21`, `bed_minus_voice_p95_db ≤ -12`, `windows_bed_within_10db_pct < 5`. If not met, lower SFX gains that fall on words or move them into gaps.
+Choose the mix profile first (`plan["mix"]`, `sound-design.md`): `voice` for organic Reels and class excerpts, `presence` for paid ads and creative mode. Profile the track with `heditor music <music:ID|file>` and set each section's `src` so its kick entries, breakdowns and lifts fall on the speech turns.
+
+Read `balance` against the profile (`rk.mix_targets`): `voice` music ≤ -21.5 dB, background p95 ≤ -12 dB, < 5 % within 10 dB; `presence` −15 / −7 dB, < 30 %. Check `music_gaps` (the bed vanished: quiet intro, long `muffled`/`lowpass` section) and `long_filtered_sections`. If the background is too loud, lower SFX gains that fall on words or move them into gaps; if the bed vanishes, pick another `src`, shorten the filtered section or raise that section's `gain_db`.
 
 ## 8. QA before render
 
@@ -74,7 +76,7 @@ Inspect `qa/sheet.jpg` with vision: overlaps, clipped text, text above y=270, fa
 ```bash
 heditor render <work> 2          # workers; a 60 s cut takes ~5–15 min depending on CPU
 heditor finalize <work> <slug>-1080x1920.mp4
-heditor asr-check <work>
+heditor asr-check <work>       # required in the presence profile; MASKED spans -> local dips in the bed
 ```
 `finalize` muxes `master.wav`, guards true peak after AAC (re-limits if needed), measures loudness, freezes and top margin, and builds `qa/final-contact-sheet.jpg` (40 frames). Review the sheet with vision. Read `quality-gates.md` for how to interpret freezes and margin flags.
 

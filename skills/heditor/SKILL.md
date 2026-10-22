@@ -4,7 +4,7 @@ description: Use when the user wants to edit a talking-head, class, live or podc
 license: MIT
 metadata:
   author: PycodeBR (Felipe Azambuja)
-  version: 2.5.3
+  version: 2.6.0
   homepage: https://github.com/pycodebr/heditor
 ---
 
@@ -114,7 +114,7 @@ Follow `references/workflow.md` step by step. Summary:
 3. **Scaffold and prepare.** `heditor new <work> <video>`, fill `BLOCKS`/`CROP` in `<work>/prepare.py`, `heditor prepare <work>`, `heditor gaps <work>` (no pause > 0.45 s), then `heditor words <work>` and fix spelling/brand names in `words-reviewed.json` (timings untouched; profanity can be masked on screen only).
 4. **Design first.** Fill `<work>/DESIGN.md`: video analysis, mode/style, frame map, palette, captions, beat sheet with timestamps, music, CTA, risks. In creative mode, research before designing.
 5. **Build.** Rewrite `<work>/build.py` (the template is only a runnable baseline) to implement DESIGN.md. Use the kit (`references/kit-api.md`) or write your own HTML when the format needs it.
-6. **Produce.** `heditor produce <work> music:<id> <drop_s>` → composition + voice-first mix; read the `balance` it prints.
+6. **Produce.** Pick the mix profile (`voice` or `presence`), profile the track with `heditor music <music:ID|file>` and place its turns on the speech turns; `heditor produce <work> music:<id> <drop_s>` → composition + mix; read the `balance` it prints (targets, `music_gaps`).
 7. **QA before render.** `heditor lint <work>` (0 errors) → `heditor preview <work> <18–24 times>` → inspect the contact sheet with vision and fix every defect → `heditor test <work>`. Gates in `references/quality-gates.md`.
 8. **Render and finalize.** `heditor render <work>` → `heditor finalize <work> <name>.mp4` → review `qa/final-contact-sheet.jpg` and `qa/final-verification.json` → `heditor asr-check <work>`.
 9. **Deliver** the MP4 path with a short summary (format, music, what was verified, what nobody has checked: nobody has *listened* to it — say so). Never publish to social networks unless the user explicitly asks.
@@ -123,7 +123,7 @@ Follow `references/workflow.md` step by step. Summary:
 ## 3. Non-negotiables
 
 - **No dead air.** Inspect pauses inside blocks and across every junction, using the assembled clean voice, not the music mix. Run `heditor gaps` after prepare and check the surrounding words. The default 0.45 s threshold flags candidates for revision; it does not authorize clipping consonants, removing every breath or flattening deliberate rhetorical pauses. Preserve speech at 1× and shorten unwanted dead air with small safety margins. Document any intentional longer pause and verify the exception explicitly before rendering. For a pause-only revision of an approved edit, preserve its visual language and previous version, remap captions, media and SFX to the new timeline, then verify the exported MP4.
-- **Voice first.** Music ≈ 21.5 dB under the voice (median), background ≥ 12 dB under at p95, impacts in the gaps, ducking held across the whole phrase. -14 LUFS, true peak ≤ -1.5 dBTP after AAC.
+- **Voice first, music present.** Mix profile by delivery (`plan["mix"]`): `voice` (default; organic Reels, class excerpts) music ≈ 21.5 dB under the voice (median), background ≥ 12 dB under at p95; `presence` (paid ads, creative mode, trailer) music ≈ 15 dB under, background p95 ≥ 7 dB under, filtered sections with make-up gain and `heditor asr-check` required. In both the bed may not vanish inside the speech (`test_music_presence`). Impacts in the gaps, ducking held across the whole phrase. -14 LUFS, true peak ≤ -1.5 dBTP after AAC.
 - **Readable captions.** Every spoken word, synced; active word with high contrast (black on light yellow, white on saturated dark — never dark-on-mid or dark outline on dark text). Check enlarged crops.
 - **Safe zones.** (9:16; every format profile has its own safe area, see `long-form.md`.) Nothing important above y = 270 (top 14%; titles with accents start ≥ 300), keep the bottom ~350 px and the right edge (~120 px, y 1000–1700) free of critical info, never cover the face.
 - **Truth.** Numbers, names and claims exactly as spoken; no invented stats, testimonials, promises or private data; no third-party logos or copyrighted assets (homage through type, colour, motion, sound).

@@ -45,7 +45,9 @@ import reelkit as rk
 ## Plan formats
 - Sound event: `{"time": s, "category": "whoosh", "variant": 0, "gain_db": -14, "rate": 1.0, "length": 0.6, "context": "why"}`. Categories: `rk.sfx_library().keys()`.
 - Music section: `{"start", "end", "mode": "full|radio|lowpass|muffled|vhs|retro|silence", "gain_db", "track", "src" (seconds inside the track), "fade_in", "fade_out"}`. `rk.music_path("music:955")` → local file.
-- `rk.mix(work, plan, rk.sfx_library(), music_body_db=-21.0, music_duck=0.80, sfx_offset_db=-7.0, sfx_duck=0.85, multiband=True, low_duck=0.55)` → writes `master.wav` (two-pass loudnorm -14 LUFS) and `qa/balance.json`; returns the balance. A build may define `sfx_lib()` to extend the library (e.g. synthesized sounds).
+- `rk.mix(work, plan, rk.sfx_library(), ...)` → writes `master.wav` (two-pass loudnorm -14 LUFS) and `qa/balance.json` (balance, `mix_profile`, `music_presence_pct`, `music_gaps`, `long_filtered_sections`, `asr_check_required`); returns the balance. Targets come from the profile in `plan["mix"]` (`"voice"` default, `"presence"` for paid ads/creative mode, or `{"profile": ..., <overrides>}`); `rk.MIX_PROFILES`, `rk.mix_targets(plan)`, `rk.presence_levels(x, hop)`, `rk.music_gaps(...)`. A build may define `sfx_lib()` to extend the library (e.g. synthesized sounds).
+- `plan["duck_open"] = [[t0, t1], ...]`: declared pauses where the ducking opens at once (hits and swells at full level).
+- `heditor music <music:ID|file> [out.json]` (`music_profile.py`): tempo, energy/s, kick/bass per second, breakdowns, kick entries, lifts — to choose each section's `src`.
 
 ## Format profiles (`import formats as fm`)
 - `fm.get(key)` → profile for `9:16` (default), `16:9`, `16:9-4k`, `1:1`, `4:5` (aliases: `landscape`, `youtube`, `square`, `portrait`, `1920x1080`…): `width`, `height`, `safe` (Rect), `safe_top`, `caption` (Rect), `caption_px`, `caption_chars`, `caption_lines`, `lower_third`, `layouts` (`pip`, `screen`, `speaker`, `side` → `{"screen": Rect|None, "camera": Rect|None, "captions": Rect}`).

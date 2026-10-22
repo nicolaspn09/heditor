@@ -570,21 +570,97 @@ def jump_segments(work, faces, voice_end, default=(0.45, 0.5)):
     return segs
 
 
+# Mix profiles (plan["mix"] = "voice" | "presence" | {"profile": ..., <overrides>}).
+#   voice    — organic Reels, class excerpts, dense explanations: music ~21.5 dB under the voice.
+#   presence — paid ads and creative mode: a rhythmic bed that is felt the whole time (~15 dB under the voice,
+#              the values of the approved trailer), filtered sections get make-up gain, asr-check is mandatory.
+# Both have a presence floor: the bed's presence band (500 Hz-6 kHz, after ducking: what the ear hears as "the
+# track" over a voice) may not stay under voice median + presence_floor_db for longer than presence_gap_s inside
+# the speech, outside sections the plan declares as "silence". Calibrated on a real case: a 16 s muffled section and
+# a quiet intro read as "no music" at -44..-58 dB; a bed that read as present sat at -28..-36 dB.
+MIX_PROFILES = {
+    "voice": {"music_median_db": -21.5, "bed_p95_db": -12.0, "within_10db_pct": 5, "music_duck": 0.80,
+              "low_duck": 0.55, "sfx_duck": 0.85, "sfx_offset_db": -7.0, "filtered_makeup_db": 0.0,
+              "presence_floor_db": -48.0, "presence_gap_s": 8.0, "asr_check_required": False},
+    "presence": {"music_median_db": -15.0, "bed_p95_db": -7.0, "within_10db_pct": 30, "music_duck": 0.62,
+                 "low_duck": 0.35, "sfx_duck": 0.60, "sfx_offset_db": -4.0, "filtered_makeup_db": 4.0,
+                 "presence_floor_db": -38.0, "presence_gap_s": 2.0, "asr_check_required": True},
+}
+FILTERED_MODES = ("muffled", "lowpass")
+
+
+def mix_targets(plan):
+    """Resolved mix targets of a plan: profile defaults + explicit overrides (legacy dicts keep working)."""
+    over = plan.get("mix") or {}
+    if isinstance(over, str):
+        over = {"profile": over}
+    name = over.get("profile") or plan.get("mix_profile") or "voice"
+    if name not in MIX_PROFILES:
+        raise ValueError(f"unknown mix profile {name!r}; use one of {sorted(MIX_PROFILES)}")
+    targets = dict(MIX_PROFILES[name])
+    targets.update({k: v for k, v in over.items() if k != "profile"})
+    targets["profile"] = name if not (set(over) - {"profile"}) else f"{name}+custom"
+    return targets
+
+
+def presence_levels(x, hop, lo=500.0, hi=6000.0):
+    """Per-window level (dB) of the presence band of a mono signal (Hann-windowed FFT power, RMS-equivalent)."""
+    f = np.fft.rfftfreq(hop, 1 / SR)
+    band = (f >= lo) & (f < hi)
+    win = np.hanning(hop)
+    out = []
+    for i in range(len(x) // hop):
+        spec = np.abs(np.fft.rfft(x[i * hop:(i + 1) * hop] * win)) ** 2
+        out.append(10 * np.log10(spec[band].sum() * 2 / (hop * np.sum(win ** 2)) + 1e-12))
+    return np.array(out)
+
+
+def music_gaps(levels_db, voice_ref_db, eligible, hop_s, floor_db, min_s=0.8, bridge_s=1.2):
+    """Runs of windows where the bed falls under voice_ref + floor (eligible windows only).
+
+    levels_db: per-window presence-band level of the bed (presence_levels); eligible: bool per window (inside the
+    speech, outside declared silence). Runs separated by less than bridge_s are merged (a bed that only peeks out
+    for a moment is still "gone"). Returns [(start_s, end_s)] of runs >= min_s and the % of eligible windows present."""
+    rel = np.asarray(levels_db) - voice_ref_db
+    low = np.asarray(eligible) & (rel < floor_db)
+    gaps, i = [], 0
+    while i < len(low):
+        if low[i]:
+            j = i
+            while j < len(low) and low[j]:
+                j += 1
+            if (j - i) * hop_s >= min(min_s, bridge_s) / 2 - 1e-9:
+                gaps.append((round(i * hop_s, 2), round(j * hop_s, 2)))
+            i = j
+        else:
+            i += 1
+    merged = []
+    for g in gaps:
+        if merged and g[0] - merged[-1][1] < bridge_s - 1e-9:
+            merged[-1] = (merged[-1][0], g[1])
+        else:
+            merged.append(g)
+    merged = [g for g in merged if g[1] - g[0] >= min_s - 1e-9]
+    n = int(np.sum(eligible))
+    present = float(np.mean(~low[np.asarray(eligible)]) * 100) if n else 100.0
+    return merged, present
+
+
 def mix(work, plan, sfx_lib, music_body_db=-21.0, music_duck=0.80, sfx_offset_db=-7.0, sfx_duck=0.85,
         multiband=True, low_duck=0.55):
-    """Voice-first mix: music ~21.5 dB under the voice (median), background >= 12 dB under at p95.
-
-    plan["mix"] can override the targets when the user explicitly asks for a louder bed (style trailer):
-    {"music_median_db": -17, "bed_p95_db": -9, "music_duck": .7, "low_duck": .45, "sfx_duck": .7}. The same
-    targets are read by test_voice_first_balance; record the user's request in the cut's DESIGN.md."""
+    """Mix with a profile (MIX_PROFILES): "voice" (default, music ~21.5 dB under the voice) or "presence" (paid
+    ads, creative mode: ~15 dB under, filtered make-up, asr-check required). plan["mix"] = "presence" or a dict
+    {"profile": "presence", <overrides>}; legacy dicts without "profile" override the voice profile. The same
+    targets are read by test_voice_first_balance and test_music_presence (rk.mix_targets)."""
     work = Path(work)
-    over = plan.get("mix", {})
-    music_duck = over.get("music_duck", music_duck)
-    low_duck = over.get("low_duck", low_duck)
-    sfx_duck = over.get("sfx_duck", sfx_duck)
-    sfx_offset_db = over.get("sfx_offset_db", sfx_offset_db)
-    target_med = float(over.get("music_median_db", -21.5))
-    target_p95 = float(over.get("bed_p95_db", -12.0))
+    tg = mix_targets(plan)
+    music_duck = tg.get("music_duck", music_duck)
+    low_duck = tg.get("low_duck", low_duck)
+    sfx_duck = tg.get("sfx_duck", sfx_duck)
+    sfx_offset_db = tg.get("sfx_offset_db", sfx_offset_db)
+    target_med = float(tg["music_median_db"])
+    target_p95 = float(tg["bed_p95_db"])
+    makeup = float(tg.get("filtered_makeup_db", 0.0))
     a = work / "composition/assets"
     duration = plan["duration"]
     n = round(duration * SR)
@@ -615,6 +691,8 @@ def mix(work, plan, sfx_lib, music_body_db=-21.0, music_duck=0.80, sfx_offset_db
             chain = ",".join(x for x in (base, filt) if x) if multiband else base
             seg = decode(sec["track"], sec["src"], end - start + 0.05, chain)
             seg = ramp(seg[: round((end - start) * SR)], sec.get("fade_in", 0.012), sec.get("fade_out", 0.025))
+            if makeup and sec["mode"] in FILTERED_MODES:
+                seg = seg * db(makeup)
             target = music_low if (multiband and band == "low") else music
             target[first: first + len(seg)] += seg[: n - first]
             if not multiband:
@@ -677,7 +755,7 @@ def mix(work, plan, sfx_lib, music_body_db=-21.0, music_duck=0.80, sfx_offset_db
     vr = lv(vfull)
     # effective speech windows: within 15 dB of the loudest window (pauses and tails excluded)
     vo = vr > (vr.max() - 15)
-    # auto-calibration: music ~21.5 dB under voice (median), background >= 12 dB under at p95 (or plan["mix"])
+    # auto-calibration to the profile targets (voice: music ~21.5 dB under, p95 >= 12 dB under; presence: -15/-7)
     for _ in range(4):
         mr = lv(music.mean(1))
         br = lv((music + sfx).mean(1))
@@ -693,6 +771,24 @@ def mix(work, plan, sfx_lib, music_body_db=-21.0, music_duck=0.80, sfx_offset_db
                "music_minus_voice_median_db": float(np.median(mr[vo] - vr[vo])),
                "sfx_minus_voice_p95_db": float(np.percentile(sr_[vo] - vr[vo], 95)),
                "windows_bed_within_10db_pct": float(np.mean(rel > -10) * 100), "windows": int(vo.sum())}
+    # presence floor: the bed may not vanish inside the speech (outside declared silence / no-music plans)
+    hop_s = hop / SR
+    tracked = [sec for sec in plan["music"] if sec["mode"] != "silence" and sec.get("track")]
+    elig = np.zeros(len(vr), bool)
+    for w in range(len(vr)):
+        t0, t1 = w * hop_s, (w + 1) * hop_s
+        if t1 > plan["voice_end"] + 1e-6:
+            break
+        inside = any(sec["start"] <= t0 + 1e-6 and t1 <= min(sec["end"], duration) + 1e-6 for sec in tracked)
+        elig[w] = inside
+    hi_db = presence_levels(music.mean(1), hop)
+    gaps, present = music_gaps(hi_db, float(np.median(vr[vo])), elig, hop_s, float(tg["presence_floor_db"]))
+    long_filtered = [[sec["start"], sec["end"], sec["mode"]] for sec in plan["music"]
+                     if sec["mode"] in FILTERED_MODES and sec["end"] - sec["start"] > 3.0]
+    balance.update({"mix_profile": tg["profile"], "music_presence_pct": round(present, 1),
+                    "music_gaps": [list(g) for g in gaps], "presence_floor_db": tg["presence_floor_db"],
+                    "presence_gap_s": tg["presence_gap_s"], "long_filtered_sections": long_filtered,
+                    "asr_check_required": bool(tg.get("asr_check_required"))})
     mixd = music + sfx + np.column_stack([vfull] * 2)
     peak = float(np.max(np.abs(mixd)))
     if peak > 0.89:

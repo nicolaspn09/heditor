@@ -90,10 +90,21 @@ def test_no_editorial_tags():
 
 def test_voice_first_balance():
     b = json.loads((WORK / "qa/balance.json").read_text())
-    over = PLAN.get("mix", {})          # user-approved louder bed (e.g. style trailer), see rk.mix
-    assert b["music_minus_voice_median_db"] <= float(over.get("music_median_db", -21.5)) + 0.5
-    assert b["bed_minus_voice_p95_db"] <= float(over.get("bed_p95_db", -12.0)) + 0.5
-    assert b["windows_bed_within_10db_pct"] < float(over.get("within_10db_pct", 5))
+    tg = rk.mix_targets(PLAN)           # profile "voice" (default) or "presence" (+ overrides), see rk.mix
+    assert b["music_minus_voice_median_db"] <= float(tg["music_median_db"]) + 0.5
+    assert b["bed_minus_voice_p95_db"] <= float(tg["bed_p95_db"]) + 0.5
+    assert b["windows_bed_within_10db_pct"] < float(tg["within_10db_pct"])
+
+
+def test_music_presence():
+    """The bed may not vanish inside the speech (quiet intros, long muffled sections): no gap longer than the
+    profile's presence_gap_s outside sections declared as "silence". Plans without music are skipped."""
+    b = json.loads((WORK / "qa/balance.json").read_text())
+    if "music_gaps" not in b:
+        return  # mixed before heditor 2.6.0: run `heditor produce` again
+    tg = rk.mix_targets(PLAN)
+    long = [g for g in b["music_gaps"] if g[1] - g[0] > float(tg["presence_gap_s"]) + 1e-6]
+    assert not long, f"music inaudible (> {tg['presence_gap_s']} s under {tg['presence_floor_db']} dB vs voice): {long}"
 
 
 def test_numbers_only_from_speech():
