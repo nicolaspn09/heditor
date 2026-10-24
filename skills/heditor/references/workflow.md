@@ -25,11 +25,14 @@ heditor transcribe <video> 0 <duration_s> <work>/qa/asr-full.json "names, jargon
 For long recordings transcribe in windows (e.g. 600 s) or use an existing transcript to locate candidates, then re-transcribe ±90 s around each candidate (timestamps from meeting transcripts are approximate).
 
 **Scripted recordings (teleprompter, ad scripts, a batch of openings):** run `heditor triage <video...> --out <dir>`
-first. The speaker pauses to read between sentences, restarts, says a sentence twice and talks to the editor ("cut
+first and follow `raw-takes.md`. The speaker pauses to read between sentences, restarts, says a sentence twice and talks to the editor ("cut
 that", "again", "I'll say it again"); a whole-file ASR glues the silences into words and invents repetitions. Triage
 splits the file at silence, transcribes each chunk alone (large-v3, no context, no vocabulary prompt) and labels it
 `keep`, `retake` (superseded by a later take, or the take right before an aside), `false_start`, `editor` (aside to
-the crew) or `noise` (breaths and clicks Whisper turns into words). Read every non-`keep` line and every `keep` marked
+the crew) or `noise` (breaths and clicks Whisper turns into words). It also lists every aside with its intent (`cut`,
+`redo`, `marker`, `note`: a `note` is an editing instruction to follow), issues inside usable chunks (stutters,
+self-corrections, asides mid-sentence, unclear words, `--forbid` phrases) and recording failures (clipping, knocks,
+duplicated frames, the set moving between takes). Read every non-`keep` line and every `keep` marked
 "right after an aside", choose one whole take per sentence (prefer the one that starts looking at the lens), and build
 the BLOCKS only from those chunks. After prepare, the assembled voice must have zero asides and zero repeated
 sentences (check the n-grams of the cut's ASR). The recording diverges from the script: what was said decides what

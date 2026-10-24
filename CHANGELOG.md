@@ -1,5 +1,41 @@
 # Changelog
 
+## 2.10.0 — 2026-10-24
+- **Recording errors and the fourth wall in `heditor triage`**, plus the new reference `references/raw-takes.md`.
+  - **Asides to the editor as instructions.** When the speaker breaks the fourth wall ("corta aí, editor", "vamos de
+    novo", "vamos editar essa parte, essa última frase", "cut that", "again"), each aside is listed with the chunk
+    before and after, an intent and the action it asks for. Intents:
+    - `cut`: discard the take before;
+    - `redo`: use the next take of the same sentence;
+    - `marker`: slate, attention or thanks;
+    - `note`: an editing instruction in the speaker's words, to follow or report.
+
+    New section "Asides to the editor (fourth wall)" in `<stem>.triage.md` and `instructions` in the JSON.
+  - **Issues inside usable chunks**, with word times:
+    - `stutter` and `repeat` ("com com", the same two words twice);
+    - `aside_inside`: an aside in the middle of a sentence;
+    - `self_correction`: "conectada por trás, não, conectada ao sistema", "quer dizer", "ou melhor", "I mean";
+    - `unclear`: low ASR confidence;
+    - `forbidden`: phrases the campaign forbids, passed with `--forbid "a,b"`.
+  - **Recording failures** (`tech`, skip with `--no-tech`):
+    - clipped samples;
+    - loud sounds outside the speech (knocks, claps, notifications);
+    - duplicated frames: about 50 % means the camera captured half the frame rate, which is not a render freeze;
+    - jumps of the set between consecutive kept takes (camera moved, light changed, something entered). Only the top
+      and the sides of the frame are measured, so the speaker's gestures do not count. On real takes the set
+      differs by 0.7–4 between takes, against 15–21 when the camera moves 2–3 px.
+  - `raw-takes.md` covers:
+    - what to do with each intent, label and issue;
+    - how to choose one whole take per sentence: eyes back on the lens, no hand on the chin in a hook;
+    - which failures can be worked around and which need a re-record (clipping, mirrored and HDR sources, the set
+      moving);
+    - what goes in the delivery.
+
+  SKILL.md gains the non-negotiable "the fourth wall stays closed": no aside reaches the cut in picture, sound or
+  captions, and every aside is followed and reported.
+- Unit tests for intents and instructions, issues and false-positive guards, and a synthetic recording with
+  clipping, a knock and a light change.
+
 ## 2.9.0 — 2026-10-24
 - **Hook tests on videos that already perform: `heditor splice`** (`scripts/reelkit/splice.py`) and the new reference
   `references/hook-variants.md`. A new opening is rendered as its own work and joined to the delivered MP4 from a cut

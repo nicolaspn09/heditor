@@ -82,3 +82,70 @@ def test_english_cues():
     rows = tr.classify([chunk(0, 3, "This is the first version of the line"), chunk(4, 5, "Let me redo that."),
                         chunk(6, 9, "This is the second version of the line")], lang="en")
     assert [r["label"] for r in rows] == ["retake", "editor", "keep"]
+
+
+def words(text, t0=0.0, step=0.3, p=0.95):
+    return [{"word": w, "start": round(t0 + i * step, 2), "end": round(t0 + i * step + 0.25, 2), "p": p}
+            for i, w in enumerate(text.split())]
+
+
+def test_aside_intents_and_instructions():
+    assert tr.aside_intent("Foi errado esse aí. Corta aí, editor.") == "cut"
+    assert tr.aside_intent("Não, de novo. Agora não.") == "redo"
+    assert tr.aside_intent("Não, vamos editar essa parte, essa última frase.") == "note"
+    assert tr.aside_intent("Atenção!") == "marker"
+    assert tr.aside_intent("Let me redo that", "en") == "redo"
+    rows = tr.classify([chunk(0, 3, "que é o documento com tudo que o sistema precisa."),
+                        chunk(4, 6, "Não, vamos editar essa parte, essa última frase."),
+                        chunk(7, 10, "que é o documento com tudo o que o sistema precisa fazer.")])
+    ins = tr.instructions(rows)
+    assert len(ins) == 1 and ins[0]["intent"] == "note"
+    assert ins[0]["before"]["chunk"] == 0 and ins[0]["after"]["chunk"] == 2
+
+
+def test_issues_inside_a_usable_chunk():
+    c = {"a": 0, "b": 6, "text": "", "label": "keep"}
+    c["words"] = words("Eu comparo com com o PRD antes de seguir")
+    assert [x["kind"] for x in tr.chunk_issues(c)] == ["stutter"]
+    c["words"] = words("Primeiro, uma instância conectada por trás, não, conectada ao sistema")
+    assert "self_correction" in [x["kind"] for x in tr.chunk_issues(c)]
+    c["words"] = words("o login funciona e aí corta isso editor e o banco de dados")
+    kinds = [x["kind"] for x in tr.chunk_issues(c)]
+    assert "aside_inside" in kinds
+    c["words"] = words("com acesso a todos os cursos da escola")
+    hit = [x for x in tr.chunk_issues(c, forbid=["todos os cursos"]) if x["kind"] == "forbidden"]
+    assert hit and hit[0]["text"] == "todos os cursos" and hit[0]["start"] == 0.9
+    c["words"] = words("um sistema completo") + [{"word": "integradíssimo", "start": 1.0, "end": 1.4, "p": 0.2}]
+    assert [x["kind"] for x in tr.chunk_issues(c)] == ["unclear"]
+    c["words"] = words("Não, isso não é bem assim, não é o que eu disse")   # plain negations are not corrections
+    assert tr.chunk_issues(c) == []
+
+
+def test_tech_report_finds_clipping_a_knock_and_a_light_change(tmp_path):
+    import subprocess
+    sr = 48000
+    t = np.arange(4 * sr) / sr
+    x = np.zeros_like(t)
+    for a, b in ((0.5, 1.5), (2.5, 3.5)):
+        m = (t >= a) & (t < b)
+        x[m] = 0.3 * np.sin(2 * np.pi * 220 * t[m])
+    x[int(1.0 * sr): int(1.0 * sr) + 40] = 1.0          # clipped run inside speech
+    x[int(2.0 * sr): int(2.0 * sr) + 400] = 0.5          # a knock between the sentences
+    wav = tmp_path / "a.wav"
+    import wave
+    with wave.open(str(wav), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(sr)
+        w.writeframes((np.clip(x, -1, 1) * 32767).astype("<i2").tobytes())
+    vid = tmp_path / "v.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=0x404040:s=108x192:r=30:d=2",
+                    "-f", "lavfi", "-i", "color=c=0xa0a0a0:s=108x192:r=30:d=2", "-i", str(wav), "-filter_complex",
+                    "[0:v][1:v]concat=n=2:v=1:a=0[v]", "-map", "[v]", "-map", "2:a", "-c:v", "libx264", "-pix_fmt",
+                    "yuv420p", "-c:a", "aac", str(vid)], check=True)
+    rows = [dict(chunk(0.5, 1.5, "primeira frase do vídeo"), label="keep"),
+            dict(chunk(2.5, 3.5, "segunda frase do vídeo"), label="keep")]
+    rep = tr.tech_report(vid, rows)
+    assert rep["clipping"]["events"] >= 1 and abs(rep["clipping"]["times"][0] - 1.0) < 0.05
+    assert any(abs(s["t"] - 2.0) < 0.05 for s in rep["sounds_outside_speech"])
+    assert rep["picture_jumps_between_kept"] and rep["picture_jumps_between_kept"][0]["why"] == "light changed"

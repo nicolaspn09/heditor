@@ -69,7 +69,7 @@ case "$cmd" in
            "$PY" "$KIT/reacaokit.py" capture "$@" ;;
   region)  # heditor region <work> <name> <crop=w:h:x:y> [filters] -> a region of the source cut with the cut's EDL
            need_work "${1:-}"; "$PY" "$KIT/reacaokit.py" region "$@" ;;
-  triage)  # heditor triage <video...> [--out DIR] [--model large-v3] [--lang pt] -> chunks between silences, labelled
+  triage)  # heditor triage <video...> [--out DIR] [--model large-v3] [--lang pt] [--forbid a,b] [--no-tech] -> raw-take report
            "$PY" "$KIT/triage.py" "$@" ;;
   splice)  # heditor splice find-cut <video> <a> <b>  |  heditor splice <opening_work> <body.mp4> <out.mp4> [--cut-frame K]
            "$PY" "$KIT/splice.py" "$@" ;;
@@ -89,8 +89,10 @@ heditor - creative video editing for AI agents (vertical Reels and long-form vid
   heditor styles                                         list the named styles
   heditor probe <video> [t...]                           frames to locate the speaker/camera
   heditor transcribe <video> <start> <dur> <out.json>    word-timed ASR of a window (use 0 and full length for all)
-  heditor triage <video...> [--out DIR] [--lang pt]      raw takes: chunks between silences transcribed alone and
-                                                         labelled keep / retake / false_start / editor / noise
+  heditor triage <video...> [--out DIR] [--lang pt] [--forbid "a,b"] [--no-tech]
+                                                         raw takes: chunks between silences transcribed alone and
+                                                         labelled keep / retake / false_start / editor / noise, asides
+                                                         to the editor with intent, stumbles, recording failures
   heditor new <work> [video] [--style nativo|reacao|...] scaffold a cut (prepare.py, build.py, DESIGN.md)
   heditor prepare <work>                                 cut speech + camera from the source (runs prepare.py)
   heditor words <work> [prompt]                          ASR of the assembled cut -> words.json/words-reviewed.json
