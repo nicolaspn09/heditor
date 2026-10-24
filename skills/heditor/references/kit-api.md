@@ -21,6 +21,8 @@ import reelkit as rk
 - `rk.prepare_voice(work)` → `voice-master.wav` (declip, high-pass, adaptive denoise, -2.5 dB @250 Hz, +2.5 dB @3.2 kHz, de-esser, 3:1 compressor, limiter).
 
 ## Words and captions
+- `import triage as tr`: `tr.voiced_chunks(db, win, thr, gap, min_len)` → `[[a, b], ...]` runs above `thr` dB merged across gaps shorter than `gap`; `tr.classify(chunks, lang)` labels `[{"a", "b", "text", "words"}]` in place (`keep`, `retake`, `false_start`, `editor`, `noise`, with a `note`); `tr.is_editor(text, lang)`; `tr.triage(video, model, lang, thr, gap)` → report. CLI: `heditor triage`.
+- `import textnorm as tn`: `tn.tokens(text)`, `tn.notation_tokens(text, lang)` (contractions, number words, times and split brand words folded), `tn.same_notation(a, b, lang)`. Used by `asr-check` and triage.
 - `rk.load_words(path, censor=None)` → `[{word, shown, start, end}]` sorted.
 - `rk.finder(words)` → `f(token, after=0.0)` returns the start of the first matching word (case/punctuation-insensitive) after a time. Use it for key moments.
 - `rk.captions(words, voice_end, max_words=3, max_chars=17)` → groups `{id, start, end, text, words}`; never overlapping.
@@ -41,6 +43,10 @@ import reelkit as rk
 
 ## depthkit (layered / 2.5D / 3D)
 `import depthkit as dk` (same folder as reelkit). `dk.person_matte(work)` → `camera-alpha.webm` + `matte-person.mp4`; `dk.depth_map(work, fps)` → `depth.mp4`; `dk.depth_look(work, name, vf_bg)`, `dk.edge_look(work, name, color, source)`, `dk.dots_look(work, name, color, step)` → `camera-<name>.mp4`; `dk.plane_matrix3d(w, h, quad)` → CSS `matrix3d`; `dk.track_points(work, t0, pts, t1)`; `dk.track_hands(work, t0, t1)`; `dk.to_stage(pt, video_size, box)`; `dk.setup_three(work)` copies three.js for offline 3D; `dk.still_layers(src, out_dir)` splits a still into a background and a soft front layer for 2.5D parallax. All outputs are frame-for-frame with `camera-hd.mp4` and rebuilt when stale. CLI: `heditor matte|depth|look|hands|plane`. Details and recipes: `depth-and-3d.md`.
+
+## Hook tests (`import splice as sp`)
+- `sp.find_cut(video, t0, t1)` → first black frames after a lit one, the biggest picture jumps and the audio level at each (the splice frame).
+- `sp.splice(opening_work, body_mp4, out_mp4, cut_frame=K, xfade_ms=8, match=True, overlay=None, overlay_until=None, overlay_fade=(0.30, 0.25), crf=14)` → joins `round(D·fps)` frames of the opening's render and its `master.wav` to the delivered body from frame K (body audio decoded whole, cut by sample, never processed), encodes once and writes `<out>.splice.json` (frame counts, gain, loudness at the splice, body/opening audio correlation and lag, frame differences, `ok`). CLI: `heditor splice`. Procedure in `hook-variants.md`.
 
 ## Plan formats
 - Sound event: `{"time": s, "category": "whoosh", "variant": 0, "gain_db": -14, "rate": 1.0, "length": 0.6, "context": "why"}`. Categories: `rk.sfx_library().keys()`.

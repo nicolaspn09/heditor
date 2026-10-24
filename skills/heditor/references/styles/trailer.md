@@ -136,6 +136,12 @@ ghosts; keep wall words above chest height where the matte is solid; show the ma
 `gaps`/`test` count only the silence around them). Put them after complete sentences on real valleys (RMS map at
 -50 dBFS); a short dip inside a word (the occlusion of a "p") is not a boundary.
 
+**In paid ads, keep the first 15 s talking.** Measured on running ads: trailer cuts with pauses, blacks and slow cards
+in the first 15 s (70–75 % voice, ~25 words) held about half as well as cuts with near-continuous speech in the same
+window (≥ 90 % voice, ≥ 38 words). Open with the title building over the speech and a card overlaid on the speaker
+instead of a silent black card; save the dramatic pauses for the turn, the date and the climax after 15 s. Check
+`first_15s` in `qa/final-verification.json`.
+
 ## CTA
 
 "LEARN MORE ›" pill on the spoken words, tap ring, bouncing chevrons, then a chip for the destination; a second CTA

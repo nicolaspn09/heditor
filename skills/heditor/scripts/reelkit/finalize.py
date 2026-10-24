@@ -59,23 +59,81 @@ def aac_true_peak(wav):
     return peaks[-1] if peaks else 0.0
 
 
-def guard_true_peak(limit=-1.5):
-    """Bright transient SFX (beeps, clicks, shutters) can push the AAC above 0 dBTP even with the WAV at -2 dB.
-    If the post-AAC peak exceeds the limit, rebuild the master with a lower loudnorm TP and keep the original."""
+def wav_lufs(path):
+    out = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(path), "-af", "ebur128", "-f", "null", "-"],
+                         capture_output=True, text=True).stderr
+    vals = [float(line.split()[1]) for line in out[out.rfind("Summary:"):].splitlines() if line.strip().startswith("I:")]
+    return vals[-1] if vals else None
+
+
+def limit_peaks(src, dst, ceiling_db, gain_db=0.0):
+    """Oversampled (4x) peak limiter with latency compensation: tames the transients without moving the audio."""
+    af = (f"volume={gain_db:.3f}dB,aresample=192000,alimiter=limit={10 ** (ceiling_db / 20):.4f}:attack=1:release=60:"
+          f"level=false:latency=1,aresample=48000")
+    run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-af", af, "-ar", "48000", "-ac", "2", "-c:a", "pcm_s16le", str(dst)],
+        timeout=300)
+
+
+def guard_true_peak(limit=-1.5, target_lufs=-14.0):
+    """Bright transient SFX (beeps, clicks, shutters, stacked impacts) can push the AAC above 0 dBTP even with the WAV
+    at -2 dB. If the post-AAC peak exceeds the limit, first limit only the peaks (oversampled limiter, gain kept so the
+    loudness stays at the target); only if that fails, rebuild the master with a lower loudnorm TP (the loudness then
+    drops ~1 dB, as a dynamic loudnorm with TP -4 does). The original is kept as master-pre-tp.wav."""
     master = WORK / "composition/assets/master.wav"
     tp = aac_true_peak(master)
     if tp <= limit:
         return {"aac_true_peak_before": tp}
     orig = WORK / "composition/assets/master-pre-tp.wav"
-    if not orig.exists():
+    if not orig.exists() or master.stat().st_mtime > orig.stat().st_mtime:   # a new produce wrote a new master
         orig.write_bytes(master.read_bytes())
+    gain, lufs = 0.0, None
+    for ceiling in (-3.0, -3.5, -4.0, -4.5, -5.0):
+        for _ in range(3):
+            limit_peaks(orig, master, ceiling, gain)
+            lufs = wav_lufs(master)
+            if lufs is None or abs(lufs - target_lufs) <= 0.1:
+                break
+            gain += target_lufs - lufs
+        after = aac_true_peak(master)
+        if after <= limit:
+            return {"aac_true_peak_before": tp, "method": "limiter", "ceiling_db": ceiling, "gain_db": round(gain, 2),
+                    "lufs_after": lufs, "aac_true_peak_after": after}
     for target in (-4.0, -5.0, -6.0):
         run(["ffmpeg", "-v", "error", "-y", "-i", str(orig), "-af", f"loudnorm=I=-14:TP={target}:LRA=9", "-ar", "48000",
              "-ac", "2", "-c:a", "pcm_s16le", str(master)], timeout=300)
         after = aac_true_peak(master)
         if after <= limit:
-            return {"aac_true_peak_before": tp, "tp_target": target, "aac_true_peak_after": after}
+            return {"aac_true_peak_before": tp, "method": "loudnorm", "tp_target": target, "aac_true_peak_after": after}
     return {"aac_true_peak_before": tp, "aac_true_peak_after": after, "warning": "true peak above limit"}
+
+
+def first_seconds(plan, seconds=15.0, thr_db=-45.0, bridge=0.25):
+    """Hook metrics of the first `seconds`: share of time with voice (10 ms RMS of voice-raw.wav above `thr_db`,
+    gaps shorter than `bridge` s bridged) and words started. Advisory for paid ads: proven hooks keep >= 90 % voice and
+    >= 38 words in the first 15 s; dramatic pauses and slow cards belong after that."""
+    voice = WORK / "composition/assets/voice-raw.wav"
+    if not voice.exists():
+        return None
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-t", str(seconds), "-i", str(voice), "-ac", "1", "-ar", str(SR), "-f",
+                          "f32le", "-"], capture_output=True).stdout
+    x = np.frombuffer(raw, np.float32).astype(np.float64)
+    hop = SR // 100
+    if len(x) < hop:
+        return None
+    on = 20 * np.log10(np.sqrt((x[: len(x) // hop * hop].reshape(-1, hop) ** 2).mean(1)) + 1e-12) > thr_db
+    v, i = on.copy(), 0
+    while i < len(on):
+        if on[i]:
+            i += 1
+            continue
+        j = i
+        while j < len(on) and not on[j]:
+            j += 1
+        if 0 < i and j < len(on) and (j - i) * 0.01 < bridge:
+            v[i:j] = True
+        i = j
+    words = sum(1 for c in plan.get("captions", []) for w in c.get("words", []) if w.get("start", 99) < seconds)
+    return {"seconds": seconds, "voice_share": round(float(v.sum()) / (seconds * 100), 3), "words": words}
 
 
 def main():
@@ -133,7 +191,7 @@ def main():
         "file": str(final), "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest(), "md5": hashlib.md5(data).hexdigest(),
         "decode_errors": decode.stderr.strip()[:500], "probe": probe, "lufs_i": grab("I:"), "lra": grab("LRA:"),
         "true_peak_dbfs": grab("Peak:"), "audio_master_corr": corr, "samples": n,
-        "expected_duration": plan["duration"], "tp_guard": tp_guard, "freezes": freezes, "top_margin_first_bright_row": top_margin(final, plan["duration"]), "safe_top": SAFE_TOP, "format": FMT.key, "contact_frames": len(times), "balance": json.loads((WORK / "qa/balance.json").read_text()),
+        "expected_duration": plan["duration"], "tp_guard": tp_guard, "first_15s": first_seconds(plan), "freezes": freezes, "top_margin_first_bright_row": top_margin(final, plan["duration"]), "safe_top": SAFE_TOP, "format": FMT.key, "contact_frames": len(times), "balance": json.loads((WORK / "qa/balance.json").read_text()),
     }
     (WORK / "qa/final-verification.json").write_text(json.dumps(result, ensure_ascii=False, indent=2))
     print(json.dumps({k: v for k, v in result.items() if k not in ("probe",)}, ensure_ascii=False, indent=1))

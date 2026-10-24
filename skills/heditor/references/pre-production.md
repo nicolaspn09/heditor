@@ -57,6 +57,15 @@ Generate it **by script from the export**, never by retyping: only the spoken li
 - **Paid-ad CTA:** the "learn more" button appears on the spoken word, with a tap and down chevrons; each world draws its own CTA and only the last second repeats the campaign tag.
 - **On-screen text from the script** enters literally on its word; if the recorded speech changes, the screen follows the speech. A source line that is written but not spoken goes in only with the user's approval.
 - **Edit order by dependency:** first the videos that need only the camera and can go live soonest; last the recorded demo and the ones waiting for a user decision. Optionally, a `nativo` version of one or two videos next to the creative edit measures what the edit adds; suggest it, do not decide it.
+- **When the recordings arrive:** run `heditor triage` on every raw file before editing (reading pauses, retakes and
+  asides to the editor are normal in teleprompter takes), and adapt each sheet to what was said: a step the speaker did
+  not say appears locked without a name, a fact not said stays off screen, and the delivery lists what of the script
+  was left out. Screens that were planned but not recorded come from recordings that already exist, projects run
+  locally and captured, or public pages; generated images only for objects and atmosphere of the world, never as a
+  system screen or a result.
+- **New openings for videos already running** (hook tests): plan one opening per hypothesis (concrete proof on frame
+  0, the first word is the object, the pain or the question, at most 12 words said before 3 s), record two energies of
+  each in the same set and light as the body, and edit them with `hook-variants.md` so the body stays identical.
 
 ## 5. Document audit
 

@@ -24,6 +24,17 @@ heditor transcribe <video> 0 <duration_s> <work>/qa/asr-full.json "names, jargon
 ```
 For long recordings transcribe in windows (e.g. 600 s) or use an existing transcript to locate candidates, then re-transcribe ±90 s around each candidate (timestamps from meeting transcripts are approximate).
 
+**Scripted recordings (teleprompter, ad scripts, a batch of openings):** run `heditor triage <video...> --out <dir>`
+first. The speaker pauses to read between sentences, restarts, says a sentence twice and talks to the editor ("cut
+that", "again", "I'll say it again"); a whole-file ASR glues the silences into words and invents repetitions. Triage
+splits the file at silence, transcribes each chunk alone (large-v3, no context, no vocabulary prompt) and labels it
+`keep`, `retake` (superseded by a later take, or the take right before an aside), `false_start`, `editor` (aside to
+the crew) or `noise` (breaths and clicks Whisper turns into words). Read every non-`keep` line and every `keep` marked
+"right after an aside", choose one whole take per sentence (prefer the one that starts looking at the lens), and build
+the BLOCKS only from those chunks. After prepare, the assembled voice must have zero asides and zero repeated
+sentences (check the n-grams of the cut's ASR). The recording diverges from the script: what was said decides what
+goes on screen; list what was left out.
+
 Selection rules:
 - A complete, self-contained idea: hook → thesis → explanation/example → conclusion. 30–70 s is the sweet spot.
 - The hook (first 1–3 s) must be a real spoken line. A cold open (strongest line first, then the argument from the start) is allowed when the line appears later in the speech; it is a stylistic choice (Ruptura, creative mode).
@@ -78,7 +89,10 @@ heditor render <work> 2          # workers; a 60 s cut takes ~5–15 min dependi
 heditor finalize <work> <slug>-1080x1920.mp4
 heditor asr-check <work>       # required in the presence profile; MASKED spans -> local dips in the bed
 ```
-`finalize` muxes `master.wav`, guards true peak after AAC (re-limits if needed), measures loudness, freezes and top margin, and builds `qa/final-contact-sheet.jpg` (40 frames). Review the sheet with vision. Read `quality-gates.md` for how to interpret freezes and margin flags.
+`finalize` muxes `master.wav`, guards true peak after AAC (first an oversampled peak limiter that keeps −14 LUFS; a lower loudnorm TP only as a fallback), measures loudness, freezes, top margin and the hook metrics of the first 15 s (`first_15s`: voice share and words; paid ads that hold attention keep ≥ 90 % voice and ≥ 38 words there), and builds `qa/final-contact-sheet.jpg` (40 frames). Review the sheet with vision. Read `quality-gates.md` for how to interpret freezes and margin flags. `asr-check` folds notation before comparing ("pra"/"para", "7h30"/"sete e meia", "5"/"cinco"), lists those differences apart as `NOTATION`, and only `MASKED` spans can need a dip; confirm each one with a short large-v3 window on both files before touching the mix.
+
+New openings for a video that is already running (hook tests): keep the body identical and follow `hook-variants.md`
+(`heditor splice find-cut` to find the frame, `heditor splice` to join the rendered opening to the delivered file).
 
 ## 10. Deliver
 

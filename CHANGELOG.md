@@ -1,5 +1,64 @@
 # Changelog
 
+## 2.9.0 — 2026-10-24
+- **Hook tests on videos that already perform: `heditor splice`** (`scripts/reelkit/splice.py`) and the new reference
+  `references/hook-variants.md`. A new opening is rendered as its own work and joined to the delivered MP4 from a cut
+  frame, so the body that is running stays identical and the test measures only the hook.
+  - `heditor splice find-cut <video> <a> <b>` finds the splice frame: first black frame after a lit one (per-frame
+    luma), biggest picture jumps and the audio level at each.
+  - `heditor splice <opening_work> <body.mp4> <out.mp4> --cut-frame K` uses `round(D·fps)` frames of the opening
+    (HyperFrames renders one extra frame), decodes the body audio whole without `-ss` (`-ss 0` on AAC drops 1024
+    samples and the body comes 21 ms early), cuts by sample with an equal-power crossfade ending on the cut, matches
+    the opening loudness to the body's 3 s before the cut (±4 dB cap), limits only the opening (oversampled limiter
+    with latency compensation), draws an optional full-canvas overlay (campaign seal) over the body with fades, and
+    encodes once.
+  - `<out>.splice.json` proves the result: frame count, body audio correlation ≥ 0.999 with lag 0 against the
+    delivered file, opening audio lag 0, short-term loudness at the splice versus the original cut, frame differences
+    on sampled body frames, true peak, decode errors, `ok`.
+  - `hook-variants.md` (from a batch of nine openings on three running ads and a rebuilt fourth): the three routes
+    (A splice onto the delivered file, B project copy for a splice inside a phrase, C rebuild and reproduce when the
+    media are gone), ending the opening in the state of the body's frame 0, colour and music continuity, loudness at
+    the splice, seals, frame 0 visibility, route B stems and matte reuse, route C reproduction criteria and task
+    sizing for agent runs.
+- **Triage of scripted raw takes: `heditor triage`** (`scripts/reelkit/triage.py`). It splits a recording at silence
+  and transcribes each chunk alone (large-v3, no context, no prompt), because a whole-file ASR glues reading pauses
+  into words and invents repetitions. Each chunk is labelled:
+  - `keep`;
+  - `retake`: superseded by a later take, or the take right before an aside;
+  - `false_start`;
+  - `editor`: asides to the editor or crew, with strong cues anywhere and weak cues at the start of a short chunk,
+    in PT and EN;
+  - `noise`: breaths and clicks, including stock Whisper hallucinations such as subtitle credits and impossible
+    speaking rates.
+
+  Writes `<stem>.triage.json` and `.md`. The workflow and pre-production references now start scripted recordings
+  with it.
+- **asr-check folds notation** (`scripts/reelkit/textnorm.py`): "pra"/"para (a)", "7h30"/"sete e meia", "5"/"cinco",
+  "Fast API"/"FastAPI" no longer count as masking. Similarity and the gate use the folded words; the raw values
+  are reported (`similarity_raw`, `delta_raw`), notation-only differences are listed as `NOTATION` apart from `MASKED`,
+  and `HEDITOR_ASR_CHECK_STRICT=1` keeps the old raw gate. On a real trailer the raw master score was 0.951 against the
+  clean voice's 0.988 (fail) with no masked word; folded, it is 0.982 against 0.994.
+- **finalize keeps −14 LUFS when the AAC peaks:** the true-peak guard now limits only the peaks first (4× oversampled
+  limiter with latency compensation, gain re-trimmed to −14 LUFS) and only falls back to a lower loudnorm TP; before,
+  a single stacked impact made the whole file end at −15 LUFS. `tp_guard.method` records which ran; a stale
+  `master-pre-tp.wav` from an older produce is replaced.
+- **Hook metrics in `qa/final-verification.json`:** `first_15s` = voice share (10 ms RMS of the cut's voice, short gaps
+  bridged) and words started in the first 15 s. Paid ads that hold keep ≥ 0.90 and ≥ 38 words; new advisory gate
+  in `quality-gates.md`, a paid-ad hook rule in SKILL.md and a "keep the first 15 s talking" note in the `trailer`
+  style, measured on running ads.
+- `heditor preview` accepts the times as separate arguments too (`heditor preview <work> 0 0.5 2 sheet.jpg`); before,
+  the second time was taken as the sheet name and the run failed with "unknown file extension".
+- Troubleshooting:
+  - whole-file ASR repetitions and noise hallucinations;
+  - a card exit crossing the speaker's face;
+  - `alimiter` latency, `-ss 0` AAC priming, HyperFrames' extra frame;
+  - phone sources with half of the frames duplicated;
+  - a white flash lifting the blacks of a dark world;
+  - character-by-character code reveals that look like a staircase;
+  - the old −15 LUFS finalize.
+- Unit tests `test_triage.py` (chunking, labels, notation folding) and `test_splice.py` (synthetic clips: cut frame,
+  frame count, untouched body audio, opening before the whole body) in CI.
+
 ## 2.8.0 — 2026-10-22
 - **New named style `reacao` (the speaker in front of the post) with a runnable reference build**
   (`heditor new <work> <video> --style reacao` + `beats.json`, example in `templates/styles/reacao/`): from a raw take
