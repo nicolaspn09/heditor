@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.10.1 — 2026-10-24
+- **Fix: `npx skills add` and `npx skills update` find the skill again** ([#1](https://github.com/pycodebr/heditor/issues/1)).
+  Since 2.1.0 the unquoted `description:` in the `SKILL.md` frontmatter contained `: ` (`nativo (clean edit: …)`,
+  `trailer (suspense/launch trailer: …)`, `gravidade (…: …)`, `circuito (…: …)`), which YAML reads as a nested
+  mapping, so strict parsers (`yaml` 2.x in `skills`, PyYAML) rejected the whole frontmatter and the skill was
+  skipped. The value is now single-quoted; the parsed description is identical to the previous text.
+- CI reads the frontmatter with PyYAML instead of a regex (name, description, `metadata.version` and its CHANGELOG
+  section), so a new style in the description cannot break installation again.
+- `CONTRIBUTING.md`: keep the description single-quoted when adding a style to it.
+- Thanks to @GabrielCesar48 for the report, the root-cause analysis and the suggested fix.
+
 ## 2.10.0 — 2026-10-24
 - **Recording errors and the fourth wall in `heditor triage`**, plus the new reference `references/raw-takes.md`.
   - **Asides to the editor as instructions.** When the speaker breaks the fourth wall ("corta aí, editor", "vamos de

@@ -11,13 +11,20 @@ jobs:
         run: python -m py_compile skills/heditor/scripts/*.py skills/heditor/scripts/reelkit/*.py skills/heditor/templates/*.py skills/heditor/templates/long/*.py
       - name: Shell syntax
         run: bash -n install.sh && bash -n skills/heditor/scripts/setup.sh && bash -n skills/heditor/scripts/heditor
+      - name: YAML parser
+        run: pip install pyyaml
       - name: SKILL.md frontmatter and catalog
         run: |
           python - <<'PY'
           import json, re, pathlib
-          s = pathlib.Path("skills/heditor/SKILL.md").read_text()
-          fm = re.match(r"^---\n(.*?)\n---\n", s, re.S).group(1)
-          assert re.search(r"^name: heditor$", fm, re.M) and "description:" in fm
+          import yaml
+          s = pathlib.Path("skills/heditor/SKILL.md").read_text(encoding="utf-8")
+          fm = yaml.safe_load(re.match(r"^---\n(.*?)\n---\n", s, re.S).group(1))
+          assert isinstance(fm, dict), "frontmatter is not a YAML mapping"
+          assert fm["name"] == "heditor", fm.get("name")
+          assert isinstance(fm["description"], str) and fm["description"].startswith("Use when"), "description"
+          assert re.fullmatch(r"\d+\.\d+\.\d+", str(fm["metadata"]["version"])), fm["metadata"]
+          assert f"## {fm['metadata']['version']} " in pathlib.Path("CHANGELOG.md").read_text(encoding="utf-8")
           cat = json.loads(pathlib.Path("skills/heditor/assets/catalog.json").read_text())
           assert cat["music"] and cat["sfx"]
           styles = sorted(p.stem for p in pathlib.Path("skills/heditor/references/styles").glob("*.md") if p.stem != "INDEX")

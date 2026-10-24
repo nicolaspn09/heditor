@@ -6,6 +6,7 @@ Obrigado por querer melhorar o heditor.
 1. Produza pelo menos um vídeo com o estilo e passe por todos os gates de `references/quality-gates.md`.
 2. Escreva `skills/heditor/references/styles/<slug>.md` seguindo `references/adding-styles.md` (mesma estrutura dos estilos existentes, em inglês, sem dados privados nem marcas de terceiros).
 3. Adicione a linha em `references/styles/INDEX.md`, na tabela do `SKILL.md` e no `README.md`.
+4. Se o estilo entrar na `description:` do frontmatter do `SKILL.md`, mantenha o valor entre aspas simples (texto com `: ` sem aspas quebra o YAML e o `npx skills` deixa de encontrar a skill). Um apóstrofo dentro do texto vira `''`. O CI lê o frontmatter com um parser YAML.
 
 ## Código do kit
 - Python 3.10+, PEP 8, funções pequenas e determinísticas (nada de aleatoriedade sem semente).
