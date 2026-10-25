@@ -115,6 +115,8 @@ Efeitos em camadas para qualquer estilo ou modo criativo (`heditor matte|depth|l
 
 Ferramentas de movimento: os plugins do GSAP (SplitText, DrawSVG, MorphSVG, MotionPath, CustomEase e outros) funcionam offline com regras de render determinístico ([`gsap-craft.md`](skills/heditor/references/gsap-craft.md)); `heditor svg` limpa SVGs com SVGO para desenho ou morph e confere pixel a pixel que a arte não mudou; `heditor physics` pré-calcula física de corpos rígidos com Rapier para camadas three.js com bloom e profundidade de campo ([`physics-3d.md`](skills/heditor/references/physics-3d.md)). Os estilos `gravidade` (física) e `circuito` (DrawSVG, MorphSVG, MotionPath e SplitText) usam esses recursos e trazem build de referência: `heditor new <work> <vídeo> --style gravidade` (ou `circuito`), escreva o `beats.json` a partir da fala e rode `heditor produce`.
 
+Vídeos de banco (B-roll) grátis do [Mixkit](https://mixkit.co/free-stock-video/), sem conta e sem chave de API: `heditor stock search "server room" --orientation portrait` lista os clipes (busca em inglês) e `heditor stock get <work> '#2'` baixa o escolhido para `composition/assets/stock/`, depois de conferir na página do clipe a licença gratuita (Mixkit Stock Video Free License, que libera anúncios, redes sociais e YouTube sem crédito obrigatório). A origem de cada arquivo fica registrada em `<work>/stock.json`. Veja [`stock-media.md`](skills/heditor/references/stock-media.md).
+
 Detalhes de cada um em [`skills/heditor/references/styles/`](skills/heditor/references/styles/).
 
 ## Modo de vídeo longo (aulas, lives, YouTube)
@@ -234,6 +236,8 @@ heditor new cortes/c01 aula.mp4                 # prepare.py, build.py e DESIGN.
 heditor prepare cortes/c01                      # corta fala e câmera, já sem pausas mortas
 heditor gaps cortes/c01                         # confere: nenhuma pausa > 0,45 s na fala montada
 heditor words cortes/c01                        # palavras do corte montado
+heditor stock search "typing on laptop" --orientation portrait   # B-roll grátis do Mixkit (busca em inglês)
+heditor stock get cortes/c01 '#1'               # baixa para composition/assets/stock e registra em stock.json
 heditor produce cortes/c01 music:955 30         # composição + mixagem
 heditor lint cortes/c01 && heditor preview cortes/c01 0.1,2,5,9,14,20 && heditor test cortes/c01
 heditor render cortes/c01 && heditor finalize cortes/c01 c01-1080x1920.mp4 && heditor asr-check cortes/c01
@@ -266,6 +270,7 @@ skills/heditor/
 - Renderização: [HyperFrames](https://github.com/heygen-com/hyperframes) (Apache-2.0, HeyGen). Animação: [GSAP](https://gsap.com) (licença standard gratuita). Transcrição: [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (MIT). Rosto, recorte e mãos: [MediaPipe](https://github.com/google-ai-edge/mediapipe) (Apache-2.0). Profundidade: [Depth Anything V2 Small](https://github.com/DepthAnything/Depth-Anything-V2) (Apache-2.0). 3D: [three.js](https://threejs.org) (MIT). Física: [Rapier](https://rapier.rs) (Apache-2.0). Limpeza de SVG: [SVGO](https://github.com/svg/svgo) (MIT).
 - Fontes: [Google Fonts](https://github.com/google/fonts) (SIL OFL 1.1). Ícones: [Lucide](https://lucide.dev) (ISC).
 - Trilhas e efeitos: [Mixkit](https://mixkit.co/license/) (Free License). Os arquivos **não** estão neste repositório; o setup baixa cada um do CDN oficial para a sua máquina.
+- Vídeos de banco: [Mixkit](https://mixkit.co/license/#videoFree) (Stock Video Free License), baixados um a um sob demanda por `heditor stock get`, nunca em massa e nunca redistribuídos aqui.
 - Tabela completa em [`references/licenses.md`](skills/heditor/references/licenses.md).
 
 O heditor não publica nada em redes sociais sozinho e não usa logos ou marcas de terceiros nos estilos de homenagem.
@@ -287,6 +292,7 @@ Issues e PRs são bem-vindos: novos estilos (com a ficha completa em `references
 - **Creative mode + reference:** e.g. "creative mode in the style of GTA 6". The agent researches the reference and builds a licence-safe homage.
 - **Long-form mode:** `heditor new --long` + `heditor long ...`: chunked resumable ASR, a reviewable EDL proposal that removes dead pauses, false starts, repetitions and fillers without cutting words, screen + camera layouts (PiP, screen zoom, speaker, side by side), chapters (cards + YouTube timestamps), burned captions and SRT/VTT, lower thirds, intro and end cards (Follow or YouTube Subscribe), every named style as a *style pack*, creative set pieces at key moments with a retention cadence per kind (class, live, YouTube), a segmented resumable render with one continuous master audio, and a long-form QA report (loudness, sync against the source, sampled ASR, chapters, segment seams). See [`long-form.md`](skills/heditor/references/long-form.md).
 - **Hook tests and raw takes:** `heditor triage` labels the chunks of a raw teleprompter take (keep, retake, false start, aside to the editor, noise), reads the speaker breaking the fourth wall as notes to the editor (cut, redo, marker, editing note), flags stumbles, self-corrections, forbidden phrases and recording failures (clipping, knocks, duplicated frames, the set moving between takes) before cutting; `heditor splice` joins a new rendered opening to a video that is already running, body untouched (audio decoded whole and cut by sample, one encode, report proving the body identical). See [`hook-variants.md`](skills/heditor/references/hook-variants.md).
+- **Free stock B-roll:** `heditor stock search|get` finds and downloads Mixkit clips (no account, no API key), checks the Mixkit Stock Video Free License on the clip page and records provenance in `<work>/stock.json`. See [`stock-media.md`](skills/heditor/references/stock-media.md).
 - **Pipeline:** word-timed ASR (faster-whisper), frame-accurate cuts, voice chain, HyperFrames (HTML + GSAP) composition, voice-first mix profiles (`voice` for organic cuts, `presence` for ads and creative mode, with a music presence floor) at −14 LUFS, and automatic QA (lint, vision-reviewed previews, tests, pixel safe-margin, loudness/true peak, ASR of the final mix, 40-frame contact sheet).
 
 **Install:** `curl -fsSL https://raw.githubusercontent.com/pycodebr/heditor/main/install.sh | bash`, or `npx skills add pycodebr/heditor -g` followed by `bash <skill>/scripts/setup.sh`. Then edit `~/.heditor/brand.json` and ask your agent: *"edit this video in creative mode"*.

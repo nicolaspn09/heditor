@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.11.0 — 2026-10-24
+- **Free stock B-roll from Mixkit: `heditor stock search` and `heditor stock get`.** No account, no API key, nothing
+  to configure.
+  - `heditor stock search "<english words>" [--orientation portrait|landscape|square] [--page N] [--limit N]
+    [--json]` lists numbered clips with orientation (from the listing thumbnail) and page URL. Paginates on the
+    canonical URL (discover pages that redirect to a tag page), caches listings for 24 h and explains empty results
+    (Mixkit searches in English) or pages with no clip in the requested orientation.
+  - `heditor stock get <work> <#N|mixkit:video:ID|clip page URL> [--quality 1080|4k|best|720] [--as name]` confirms
+    the Mixkit Stock Video Free License on the clip page, downloads from the official CDN with size fallback into
+    `<work>/composition/assets/stock/`, probes size and duration, records provenance in `<work>/stock.json` (licence,
+    page, download URL, SHA-256, size) and prints the DESIGN.md line.
+- New reference `references/stock-media.md`: commands, using clips in the page (unique `id`, muted,
+  `data-media-start`), choosing B-roll that serves the speech, the Mixkit User Terms that bind the tool (one clip per
+  `get`, never mass downloads or redistribution) and why Pexels, Pixabay, Unsplash, Adobe Stock and Videezy are not
+  built in (per-user API keys, hotlinking/attribution rules, enterprise-only API, mandatory attribution).
+- `SKILL.md`, `README.md` and `references/licenses.md` document the new source; CI runs `test_stock.py` (parsing,
+  references, cache, orientation filter, provenance, licence refusal; no network).
+
 ## 2.10.1 — 2026-10-24
 - **Fix: `npx skills add` and `npx skills update` find the skill again** ([#1](https://github.com/pycodebr/heditor/issues/1)).
   Since 2.1.0 the unquoted `description:` in the `SKILL.md` frontmatter contained `: ` (`nativo (clean edit: …)`,

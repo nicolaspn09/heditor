@@ -22,6 +22,7 @@
 | Fonts from github.com/google/fonts | typography | SIL Open Font License 1.1 | downloaded by setup with OFL.txt files |
 | Lucide icons | inline SVG icons | ISC | downloaded on demand |
 | Mixkit music and sound effects | soundtrack and SFX | Mixkit Stock Music Free License / Mixkit Sound Effects Free License (https://mixkit.co/license/) | downloaded by setup from Mixkit's CDN to the user's machine; never redistributed in this repository |
+| Mixkit stock video | B-roll (`heditor stock`) | Mixkit Stock Video Free License (https://mixkit.co/license/#videoFree), subject to the Mixkit User Terms (no mass download, no redistribution as stock) | one clip per `heditor stock get`, on demand, from Mixkit's CDN into the work dir after the licence is confirmed on the clip page; provenance in `<work>/stock.json` |
 
 Optional external tools referenced by some styles (not installed by setup; check the licence before using them in your project and record it in DESIGN.md):
 
