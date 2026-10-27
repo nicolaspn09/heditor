@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.14.2 — 2026-10-26
+- `references/heygen-avatar.md`: natural gaze for avatar scenes. A fixed stare is the clearest sign of an avatar
+  (9 % of frames away from the central point against 36 % in a real recording); every motion prompt gets a varied gaze
+  cue (eye contact plus short thinking glances), and `more_blinking` is flagged because it pulled the gaze down for
+  most of a line.
+
 ## 2.14.1 — 2026-10-26
 - `references/heygen-avatar.md`: the per-sentence recipe now generates with the person's voice selected (`script` +
   `voice_id` per studio scene, the engine saved on the voice, glossary at the top level) and explains why uploading

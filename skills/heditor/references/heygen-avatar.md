@@ -121,7 +121,12 @@ Recipe:
 4. Direct a visible hand gesture in the first scenes: the opening seconds decide retention, and an avatar that only
    moves its head there reads as stiff. A short opening scene with one strong gesture works better than a long scene
    with a vague prompt.
-5. Check the result: ASR word by word against the approved script, hands, teeth, eyes and mouth on enlarged frames.
+5. Give the eyes life. A gaze fixed on one point for the whole speech is the clearest sign of an avatar (measured:
+   9 % of frames away from the central point, against 36 % in the person's real recording). Add a gaze cue to every
+   motion prompt and vary it across scenes: eye contact most of the time, and in about half the scenes a short glance
+   ("glancing down to the side as if thinking, then back to the camera", "glancing at the hand" when showing
+   something). `more_blinking` (outside `studio` only) made the avatar look down for most of a line, as if reading.
+6. Check the result: ASR word by word against the approved script, hands, teeth, eyes, gaze and mouth on enlarged frames.
    Every scene start resets the pose: plan a framing change or transition there. A defective scene is regenerated
    alone (one scene of the same recipe), never the whole video.
 
