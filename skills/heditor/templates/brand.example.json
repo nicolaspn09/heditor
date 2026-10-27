@@ -13,5 +13,8 @@
     "accent2": "#7dd3fc",
     "alert": "#ff3d57",
     "ok": "#7dffb0"
+  },
+  "heygen": {
+    "voice_id": ""
   }
 }

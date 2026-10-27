@@ -67,8 +67,9 @@ What happens:
    9:16 gets a warning (it will be cropped or letterboxed: record the twin vertically for Reels).
 2. Duration is measured (audio) or estimated from the script (2.6 words/s) and the cost estimate is printed in the
    unit of the connection: premium credits on OAuth, USD on the API wallet. Rates are the published ones at release
-   (Avatar V 48 credits/min or US$ 7.20/min; Avatar IV twin 31 credits/min or US$ 4.83/min; photo 16 credits/min or
-   US$ 2.31/min; Avatar III twin US$ 0.60/min). HeyGen changes them and bills the real duration: the estimate exists
+   (Avatar V 48 credits/min on photo and video looks, or US$ 7.20/min for a twin on the API wallet; Avatar IV twin
+   31 credits/min or US$ 4.83/min; photo 16 credits/min or US$ 2.31/min; Avatar III twin US$ 0.60/min). A 77 s
+   Avatar V video on a photo look cost 63 credits in October 2026, in line with the table. HeyGen changes them and bills the real duration: the estimate exists
    so a person approves the spend, it is not the invoice.
 3. Confirmation. Without a terminal the command stops and asks to re-run with `--yes`; **agents pass `--yes` only
    after the person who pays saw the estimate and approved it.** `--dry-run` never spends.
@@ -78,6 +79,45 @@ What happens:
 5. `<work>/avatar.json` records provider, video id, look, avatar type, engine, voice, input hash, billing mode,
    estimate, file SHA-256, size, duration, timestamps and `synthetic: true`. If the render outlives `--timeout`, the
    entry stays `rendering` and `heditor avatar <work> --resume <video_id>` downloads it later (exit code 4 meanwhile).
+
+## The person's official voice
+
+A synthetic video of a real person must speak with that person's own cloned voice, every time. HeyGen does not
+guarantee it: `heygen avatar looks get` can return a stock voice as the `default_voice_id` of a photo look, even when
+the avatar list shows the person's clone as its default. A request without `voice_id` would then put a stranger's
+voice in the person's mouth.
+
+- Set the official voice once in `~/.heditor/brand.json`: `"heygen": {"voice_id": "<id from heditor heygen voices>"}`
+  (or `HEDITOR_HEYGEN_VOICE`). `heditor avatar` uses it whenever `--voice` is not passed and prints where the voice
+  came from.
+- Without a brand voice, `heditor avatar` uses the look's default voice only when it is one of the account's cloned
+  voices; otherwise it stops and asks for `--voice`.
+- When you call the HeyGen CLI directly (speech first, studio scenes), always pass the official `voice_id`.
+
+## Audio first and one motion prompt per sentence (direct HeyGen CLI)
+
+For the most control over pronunciation, pace and gestures, generate and approve the voice before any video exists,
+then let the avatar lip-sync that exact audio:
+
+1. `heygen voice speech create -d <json>` per block of the spoken script, with the official `voice_id` (read
+   `--request-schema`). A short sample cost about one credit in October 2026; compare the balance before and after.
+   With the `elevenlabs` engine and `settings.model_id: eleven_v3`, a delivery tag at the start of a block
+   (`[serious]`, `[calm]`, `[thoughtful]`, `[warmly]`, `[confident]`, `[excited]`) shapes the intonation and is not
+   spoken. Check each block with ASR: repeated short words can be swallowed (a spoken code "zero cinco um um" lost a
+   digit; commas between the digits fixed it), and a fast block can be split with breathing pauses inserted in the
+   real silence between sentences (never by cutting audio).
+2. Join the approved blocks into one master audio and slice it in the middle of pauses into scenes of 3 to 10 s, one
+   gesture idea each.
+3. `heygen asset create --file sNN.wav` per scene, then one `type: studio` request with an `avatar_video` scene per
+   slice: the same look, the same engine (`avatar_v` with `reference_look_id` set to the person's digital twin) and a
+   `motion_prompt` per scene ("[body part] + [action] + [emotion]", one gesture, under two clauses). `more_blinking`
+   is rejected in studio videos. The scenes are concatenated without gaps and the video's audio is the master.
+   Direct a visible hand gesture in the first scenes: the opening seconds decide retention, and an avatar that
+   only moves its head there reads as stiff. A short opening scene with one strong gesture works better than a long
+   scene with a vague prompt.
+4. Verify the downloaded file against the master (envelope correlation, offset per scene), then inspect hands, teeth,
+   eyes and mouth on enlarged frames. Every scene start resets the pose: plan a framing change or transition there.
+   A defective or gesture-less scene is regenerated alone (one scene of the same studio recipe), never the whole video.
 
 ## Writing the script for the voice (pronunciation and natural speech)
 

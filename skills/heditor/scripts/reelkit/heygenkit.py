@@ -48,7 +48,7 @@ ENGINES = {"v": "avatar_v", "iv": "avatar_iv", "iii": "avatar_iii",
 # without notice: they are an estimate shown before asking for approval, never the amount billed.
 RATES_AS_OF = "2026-10"
 CREDITS_PER_MIN = {  # subscription (OAuth) premium credits per minute
-    ("avatar_v", "digital_twin"): 48, ("avatar_v", "studio_avatar"): 48,
+    ("avatar_v", "digital_twin"): 48, ("avatar_v", "studio_avatar"): 48, ("avatar_v", "photo_avatar"): 48,
     ("avatar_iv", "digital_twin"): 31, ("avatar_iv", "studio_avatar"): 31, ("avatar_iv", "photo_avatar"): 16,
 }
 USD_PER_MIN = {  # API wallet, USD per minute
@@ -199,6 +199,37 @@ def lang():
         except (OSError, ValueError):
             value = ""
     return "pt" if str(value).lower().startswith("pt") else "en"
+
+
+def brand_voice():
+    """The user's official voice for every avatar video: brand.json `heygen.voice_id` (or HEDITOR_HEYGEN_VOICE)."""
+    value = os.environ.get("HEDITOR_HEYGEN_VOICE", "")
+    if not value:
+        try:
+            data = json.loads((heditor_home() / "brand.json").read_text(encoding="utf-8"))
+            value = (data.get("heygen") or {}).get("voice_id") or ""
+        except (OSError, ValueError, AttributeError):
+            value = ""
+    return value.strip() or None
+
+
+def resolve_voice(explicit, look):
+    """Voice for a script: --voice, else the brand voice, else the look's default only if it is one of the
+    account's cloned voices. A look's default voice can be a stock voice (HeyGen returns one for photo looks),
+    and a stock voice speaking as the person is the worst possible mistake, so it is never used silently."""
+    if explicit:
+        return explicit, "--voice"
+    brand = brand_voice()
+    if brand:
+        return brand, "brand.json heygen.voice_id"
+    default = look.get("default_voice_id")
+    cloned = {v.get("voice_id") for v in list_voices()}
+    if default and default in cloned:
+        return default, "look default (one of your cloned voices)"
+    raise HeyGenError(
+        f"the look's default voice ({default or 'none'}) is not one of your cloned voices: pass --voice ID "
+        "(heditor heygen voices) or set your official voice once in ~/.heditor/brand.json as "
+        '"heygen": {"voice_id": "<id>"}', EXIT_USAGE)
 
 
 def msg(key, **kw):
@@ -879,10 +910,8 @@ def avatar(args):
         check_breaks(script)
         seconds = script_seconds(script, args.speed or 1.0)
         digest = hashlib.sha256(script.encode("utf-8")).hexdigest()
-        voice_id = args.voice or look.get("default_voice_id")
-        if not voice_id:
-            raise HeyGenError("this look has no default voice: pass --voice ID (see heditor heygen voices)",
-                              EXIT_USAGE)
+        voice_id, voice_source = resolve_voice(args.voice, look)
+        args.voice_source = voice_source
     else:
         audio = Path(args.audio)
         if not audio.exists():
@@ -986,7 +1015,8 @@ def _print_plan(status, look, engine, voice_id, args, seconds, cost):
           f"orientation={look.get('preferred_orientation') or '?'}")
     print(f"engine:   {engine}   aspect: {args.aspect}   resolution: {args.resolution or 'default'}")
     if voice_id:
-        print(f"voice:    {voice_id}" + (f"   speed: {args.speed}" if args.speed is not None else ""))
+        print(f"voice:    {voice_id}  ({getattr(args, 'voice_source', '--voice')})"
+              + (f"   speed: {args.speed}" if args.speed is not None else ""))
     if args.script or args.text:
         print(f"glossary: {args.glossary}" if args.glossary else
               "glossary: none (terms are read as written; see heditor heygen glossaries)")
@@ -1018,7 +1048,8 @@ def main(argv=None):
         parser.add_argument("--script", help="text file with the script")
         parser.add_argument("--text", help="the script inline")
         parser.add_argument("--audio", help="audio file to lip-sync (mp3/wav), e.g. your own recording")
-        parser.add_argument("--voice", help="voice id for a script (default: the look's default voice)")
+        parser.add_argument("--voice", help="voice id for a script (default: brand.json heygen.voice_id, else the "
+                                            "look's default voice if it is one of your cloned voices)")
         parser.add_argument("--engine", help="v, iv or iii (default: v when the look supports it)")
         parser.add_argument("--aspect", default="9:16", choices=["9:16", "16:9", "4:5", "5:4", "1:1", "auto"])
         parser.add_argument("--resolution", default="1080p", choices=["720p", "1080p", "4k"])

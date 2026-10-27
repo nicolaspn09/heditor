@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.14.0 — 2026-10-26
+- **The person's official voice in every avatar video.** `heditor avatar` takes the voice from `--voice`, else from
+  `~/.heditor/brand.json` `"heygen": {"voice_id": ...}` (or `HEDITOR_HEYGEN_VOICE`), else from the look's default
+  only when that voice is one of the account's cloned voices; otherwise it stops and asks for `--voice`. HeyGen can
+  return a stock voice as the default of a photo look, which would have put another voice in the person's mouth. The
+  plan printed before a generation shows where the voice came from. `templates/brand.example.json` gains the key.
+- Avatar V on photo looks now has an estimate: 48 credits/min, as in HeyGen's credit table (it printed "no public
+  rate" before). A real 77 s generation cost 63 credits.
+- `references/heygen-avatar.md`: "The person's official voice" and "Audio first and one motion prompt per sentence"
+  (speech per block with delivery tags, ASR check, master audio sliced into 3–10 s scenes, one `studio` request with an
+  Avatar V scene and a motion prompt per slice, gestures in the opening scenes, verification against the master,
+  regenerating only the defective scene). `SKILL.md` and `README.md` point to them.
+- `test_heygen.py`: refusal of a stock default voice, brand voice in the request, Avatar V photo-look estimate.
+
 ## 2.13.0 — 2026-10-26
 - **Pronunciation and natural speech for HeyGen avatar scripts.**
   - `heditor avatar --glossary ID` passes a HeyGen brand glossary (`brand_glossary_id`): written terms are spoken

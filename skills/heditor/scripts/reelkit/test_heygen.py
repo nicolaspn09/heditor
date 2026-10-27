@@ -45,7 +45,8 @@ if args[:3] == ["user", "me", "get"]:
                           "add_on_credits": {"remaining": 0}}}}})
     out({"data": {"username": "felipe", "email": "f@example.com", "first_name": "F", "last_name": "A",
                   "billing_type": "wallet", "wallet": {"currency": "usd", "remaining_balance": 25.5}}})
-LOOK = {"id": "look1", "name": "Felipe studio", "avatar_type": "digital_twin", "default_voice_id": "voice1",
+LOOK = {"id": "look1", "name": "Felipe studio", "avatar_type": "digital_twin",
+        "default_voice_id": os.environ.get("FAKE_LOOK_VOICE", "voice1"),
         "preferred_orientation": os.environ.get("FAKE_ORIENTATION", "portrait"), "status": "completed",
         "supported_api_engines": ["avatar_v", "avatar_iv"]}
 if args[:3] == ["avatar", "looks", "get"]:
@@ -280,6 +281,7 @@ def test_disconnect_needs_confirmation(fake, monkeypatch):
 def test_cost_estimates():
     sub = heygenkit.estimate_cost("avatar_v", "digital_twin", 60, "subscription")
     assert sub["unit"] == "credits" and sub["amount"] == 48
+    assert heygenkit.estimate_cost("avatar_v", "photo_avatar", 60, "subscription")["amount"] == 48
     api = heygenkit.estimate_cost("avatar_iv", "digital_twin", 60, "wallet")
     assert api["unit"] == "usd" and api["amount"] == 4.83
     assert heygenkit.estimate_cost("avatar_iii", "digital_twin", 60, "subscription")["amount"] is None
@@ -386,6 +388,27 @@ def test_glossaries_list_terms(fake, capsys):
     assert heygenkit.main(["glossaries"]) == 0
     out = capsys.readouterr().out
     assert "gl1" in out and "Python  ->  páiton" in out
+
+
+def test_avatar_never_uses_a_stock_default_voice(fake, tmp_path, monkeypatch):
+    monkeypatch.setenv("FAKE_LOOK_VOICE", "stock_voice_9")  # HeyGen returns a stock voice for photo looks
+    with pytest.raises(heygenkit.HeyGenError) as exc:
+        _avatar(tmp_path / "w", "--look", "look1", "--text", "Olá.", "--dry-run")
+    assert exc.value.code == heygenkit.EXIT_USAGE and "not one of your cloned voices" in str(exc.value)
+    assert _avatar(tmp_path / "w", "--look", "look1", "--text", "Olá.", "--voice", "voice1", "--dry-run") == 0
+
+
+def test_avatar_uses_the_brand_voice(fake, tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("FAKE_LOOK_VOICE", "stock_voice_9")
+    home = tmp_path / "home"
+    home.mkdir(exist_ok=True)
+    (home / "brand.json").write_text(json.dumps({"lang": "pt", "heygen": {"voice_id": "voice1"}}), encoding="utf-8")
+    monkeypatch.setenv("HEDITOR_HOME", str(home))
+    monkeypatch.setenv("HEDITOR_LANG", "en")
+    assert _avatar(tmp_path / "w", "--look", "look1", "--text", "Olá.", "--yes") == 0
+    req = json.loads(next(c for c in fake() if c["args"][:2] == ["video", "create"])["stdin"])
+    assert req["voice_id"] == "voice1"
+    assert "brand.json heygen.voice_id" in capsys.readouterr().out
 
 
 def test_idempotency_key_is_stable():
