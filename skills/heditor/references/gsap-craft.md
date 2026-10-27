@@ -40,6 +40,22 @@ Use the seeded `rnd()` from the kit (seed in `keys["seed"]`) at build time inste
 timeline is built, and pass numbers (or a function of the index) to the tween. For a random stagger order, shuffle an
 index array with `rnd()` and stagger with a function: `stagger: (i) => order[i] * 0.04`.
 
+## Sequential seeks vs a single seek (preview and render disagree)
+
+The render seeks frame after frame, in order, so it behaves like forward playback: when a tween is still running at
+the moment a later `set`/tween on the same property fires, the earlier tween keeps rendering until it completes and
+its end value wins. `heditor preview` seeks straight to each time, renders every child in start order and shows the
+later `set`. The preview looks right and the MP4 does not (first avatar Reel: a 0.24 s yoyo blink on corner brackets
+ended 0.08 s after the `set` that hid them, so the brackets stayed on screen until the end card).
+
+- Never let two tweens/sets on the same property of the same element overlap: end the first before the second starts,
+  and compute that from the timeline keys (`Math.min(a, b - duration - 0.05)`), because the cut moves when the speech
+  is re-prepared.
+- With the kit's `FT` helper (`immediateRender: false`), the *from* values are not applied before the tween starts:
+  an element that must stay hidden until its word needs an explicit `set` (or CSS) before it.
+- After the render, check the transitions on frames taken from the MP4 (`ffmpeg -ss <t> -i render.mp4 -frames:v 1`),
+  not only on previews: the end of every section, the scene seams and the CTA.
+
 ## Rules worth applying from the official skills
 
 - **Stacked `from()`/`fromTo()` on the same property:** set `immediateRender: false` on every later tween, or the first

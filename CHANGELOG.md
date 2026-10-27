@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.15.1 — 2026-10-27
+- `references/gsap-craft.md` § Sequential seeks vs a single seek: the render seeks frame after frame (forward), so a
+  tween still running when a later `set` on the same property fires wins in the MP4 while `heditor preview` shows the
+  `set` (corner brackets that stayed on screen until the end card). Overlapping tweens on the same property are
+  forbidden, the end of one is computed from the keys of the next, `FT` with `immediateRender: false` needs an explicit
+  initial `set`, and transitions are checked on frames of the MP4.
+- `references/quality-gates.md` § Leftover elements: check them on frames of the rendered MP4 too, and end the exits of
+  outgoing cards before a scene cut so they never land on the cut-out speaker's new position.
+
 ## 2.15.0 — 2026-10-27
 - **Pause cuts on scene seams.** `prepare_cut(..., seams=[...])` takes the source times of the first frame of each new
   scene (pose resets of a HeyGen studio video, splices of joined takes) and moves every pause trim that contains a seam

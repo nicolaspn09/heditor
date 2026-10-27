@@ -47,4 +47,7 @@ duplicated frame at a boundary, `qa/seams.jpg`) and contact sheets `qa/long-shee
 
 ## Leftover elements
 
-Preview a few frames long after every short-lived element (labels, chips, notes shorter than ~0.6 s) and in the CTA: anything still visible there that belongs to an earlier beat is a timeline bug (overlapping in/out tweens), not a design choice.
+Preview a few frames long after every short-lived element (labels, chips, notes shorter than ~0.6 s) and in the CTA: anything still visible there that belongs to an earlier beat is a timeline bug (overlapping in/out tweens), not a design choice. Do this check on frames extracted from the rendered MP4 as well: the render seeks frame by frame in order and an
+overlapping tween can win there while the preview (a single seek) hides it (`references/gsap-craft.md` § Sequential
+seeks). With a cut-out speaker, also look at every scene change: an outgoing card that is still fading after the cut
+lands on the speaker's new position as a double exposure; end the exits before the cut.
