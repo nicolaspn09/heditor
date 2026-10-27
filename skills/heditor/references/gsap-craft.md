@@ -94,6 +94,9 @@ index array with `rnd()` and stagger with a function: `stagger: (i) => order[i] 
   `shapeIndex: "log"`, read the value in the console of a preview, then write the number in the build. Try
   `type: "rotational"` (and `curveMode: true` in 3.14) when a morph kinks halfway. `precompile: "log"` once for very
   complex paths. `MorphSVGPlugin.convertToPath("circle, rect, ellipse")` before morphing primitives.
+- Rotating an SVG element (a gauge needle, a dial): GSAP applies `transformOrigin` relative to the element's own
+  bounding box, so a needle spins around its tip or its centre instead of the pivot. Use `svgOrigin: "x y"` in the
+  SVG's user coordinates (the pivot point of the dial), set once with `gsap.set` before the tweens.
 
 ## Prepare SVGs with `heditor svg` (SVGO)
 

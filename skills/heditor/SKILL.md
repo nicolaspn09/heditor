@@ -4,7 +4,7 @@ description: 'Use when the user wants to edit a talking-head, class, live or pod
 license: MIT
 metadata:
   author: PycodeBR (Felipe Azambuja)
-  version: 2.14.3
+  version: 2.15.0
   homepage: https://github.com/pycodebr/heditor
 ---
 
@@ -137,6 +137,10 @@ When there is no recording, only a script, the source can be the user's own HeyG
   (`heditor heygen glossaries`, `--glossary ID`), respelled the way the person really says them. After generating,
   compare the transcript with the approved script word by word and regenerate any mispronounced line
   (`references/heygen-avatar.md` § Writing the script for the voice).
+- Editing a studio avatar video (one scene per sentence): pass the scene seams to the prepare
+  (`prepare_cut(..., seams=[...])`) so every pause cut lands on a pose reset instead of a few frames from it, check
+  each splice of joined renders for clicks and each scene start for a head dip, and never blank the speaker to hide
+  a jump (`references/heygen-avatar.md` § Editing an avatar video).
 - The user approves every script; no claims, numbers or promises they did not approve; disclose AI use where a
   platform or law requires it.
 

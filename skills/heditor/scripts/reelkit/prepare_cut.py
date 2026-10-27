@@ -69,8 +69,35 @@ def _voiced_span(quiet, min_run=4):
     return first, last
 
 
+def cut_on_seam(r0, r1, s, e, start, fps, seams):
+    """Shift a pause trim so its cut lands on a scene seam inside the pause, removing the same number of frames.
+
+    Sources joined from scenes (AI avatar studio videos, spliced takes) reset the pose at every seam. When the seam
+    sits in a kept edge of the pause, the trim cut and the pose reset become two jumps a few frames apart (a stutter
+    that edits tend to hide by blanking the speaker). Moving the removed window so the joint is "last frame of the old
+    scene -> first frame of the new one" leaves a single discontinuity, at the seam, and keeps the timeline intact.
+
+    r0/r1: removed frames [r0, r1) relative to the block start; s/e: the pause in seconds relative to the block start;
+    start: block start in source seconds; seams: source times of the first frame of each new scene.
+    Returns (r0, r1, seam or None).
+    """
+    tol = 1.0 / fps
+    for t in seams or ():
+        rel = t - start
+        if not (s - tol <= rel <= e + tol):
+            continue
+        ft = round(rel * fps)
+        if r0 <= ft <= r1:
+            return r0, r1, t
+        width = r1 - r0
+        if ft > r1:
+            return ft - width, ft, t
+        return ft, ft + width, t
+    return r0, r1, None
+
+
 def prepare_cut(source, work, blocks, crop, fps=24, min_pause=0.35, edge=0.12, tail_fade=0.04,
-                lead=0.08, tail=0.12, fmt=None):
+                lead=0.08, tail=0.12, fmt=None, seams=None):
     source, work = Path(source), Path(work)
     if crop and str(crop).startswith("fit:"):
         import formats
@@ -121,11 +148,13 @@ def prepare_cut(source, work, blocks, crop, fps=24, min_pause=0.35, edge=0.12, t
                     j += 1
                 s, e = i / 100, j / 100
                 if e - s > min_pause and s > 0.1 and e < dur - 0.1:
-                    r0, r1 = math.ceil((s + edge) * fps), math.floor((e - edge) * fps)
+                    r0, r1 = math.ceil((s + edge) * fps - 1e-6), math.floor((e - edge) * fps + 1e-6)
                     if r1 - r0 >= 1:
+                        r0, r1, seam = cut_on_seam(r0, r1, s, e, start, fps, seams)
                         removed.append((r0, r1))
                         trims.append({"block": key, "source_start": start + s, "source_end": start + e,
-                                      "removed_s": (r1 - r0) / fps})
+                                      "removed_s": (r1 - r0) / fps,
+                                      **({"seam": seam, "cut_source": start + r1 / fps} if seam is not None else {})})
                 i = j
             else:
                 i += 1

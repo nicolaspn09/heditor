@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.15.0 — 2026-10-27
+- **Pause cuts on scene seams.** `prepare_cut(..., seams=[...])` takes the source times of the first frame of each new
+  scene (pose resets of a HeyGen studio video, splices of joined takes) and moves every pause trim that contains a seam
+  so the cut lands exactly on it, removing the same number of frames (the timeline does not change). A seam in a kept
+  edge of a pause used to give two jumps a few frames apart; the first avatar Reel hid the speaker between them and it
+  read as a vanish. The trim records `seam` and `cut_source` in `edl.json`. Trim frame bounds are now computed with a
+  small epsilon, so a pause edge that falls exactly on a frame is no longer shifted by one frame by float error.
+- **Matte without background haze.** `depthkit.person_matte(..., floor=0.09)` clears the faint alpha a segmenter
+  leaves over the whole background (4-6 % on a synthetic plate: the office shelf showed through as a ghost over a
+  graphic wall) and stretches the soft edge back to 0..1 (`alpha_floor`); `qa/matte-stats.json` reports
+  `background_haze` measured before the floor. `floor=0` keeps the previous behaviour.
+- `references/heygen-avatar.md` § Editing an avatar video: scene seams and the prepare, clicks at splices of joined
+  renders (mute the burst before the prepare), head dip at the start of a regenerated scene, matte haze.
+  `references/gsap-craft.md`: `svgOrigin` for rotating SVG elements (gauges, dials). `references/troubleshooting.md`:
+  lint `gsap_animates_clip_element`, a speaker vanishing at a seam, ghost behind a cut-out. `SKILL.md` points to them.
+- `test_prepare_cut.py` (in CI): trim window moved onto the seam with the same width, a synthetic two-scene source
+  where the colour changes exactly on the cut, and the alpha floor.
+
 ## 2.14.3 — 2026-10-26
 - `references/heygen-avatar.md`: corrected gaze guidance. Prompted side glances made an avatar talk turned away (8 s at
   30° of head yaw), which is as unnatural as a fixed stare; every scene now keeps eye contact with the camera with

@@ -111,8 +111,19 @@ def _sheet(frames, out, w=270):
 
 # ---------------------------------------------------------------- person matte
 
+def alpha_floor(m, floor):
+    """Remove the faint alpha a segmenter leaves over the whole background, keeping the edge gradient.
+
+    a' = (a - floor) / (1 - floor), clipped to 0..1: everything at or below `floor` becomes fully transparent and the
+    soft edge is stretched back to 0..1. Synthetic plates (AI avatars) showed a haze of ~0.04-0.07 that made the room
+    show through as a ghost over graphic walls."""
+    if not floor:
+        return m
+    return np.clip((m - floor) / (1.0 - floor), 0.0, 1.0)
+
+
 def person_matte(work, video="camera-hd.mp4", name="camera-alpha", model="multiclass", ema=0.4,
-                 radius=6, eps=2e-3, gamma=1.25, erode=1, keep_classes=None, crf=26):
+                 radius=6, eps=2e-3, gamma=1.25, erode=1, keep_classes=None, crf=26, floor=0.09):
     """Alpha matte of the speaker, frame for frame with `video`.
 
     Writes into <work>/composition/assets:
@@ -123,7 +134,8 @@ def person_matte(work, video="camera-hd.mp4", name="camera-alpha", model="multic
     model="multiclass" keeps hair, skin, clothes and accessories (classes 1-5); pass keep_classes to drop
     some (e.g. {1, 2, 3, 4} drops accessories such as a microphone arm). ema smooths flicker over time,
     the guided filter (radius/eps) snaps the edge to the RGB, gamma tightens the soft halo, erode shrinks
-    the edge by N px to remove background fringe.
+    the edge by N px to remove background fringe, floor removes the faint alpha left over the whole background
+    (qa/matte-stats.json reports it as background_haze, measured before the floor).
     """
     import cv2
     import mediapipe as mp
@@ -145,7 +157,7 @@ def person_matte(work, video="camera-hd.mp4", name="camera-alpha", model="multic
                                                  "-cpu-used", "4", "-metadata:s:v:0", "alpha_mode=1"])
     mask = _writer(out_mask, w, h, fps, "gray", ["-c:v", "libx264", "-preset", "medium", "-crf", "16",
                                                  "-pix_fmt", "yuv420p"])
-    prev, cover, picks, n = None, [], [], 0
+    prev, cover, picks, n, haze = None, [], [], 0, []
     kernel = np.ones((3, 3), np.uint8)
     for i, frame in enumerate(_reader(src, w, h)):
         res = seg.segment_for_video(mp.Image(image_format=mp.ImageFormat.SRGB, data=np.ascontiguousarray(frame)),
@@ -157,6 +169,10 @@ def person_matte(work, video="camera-hd.mp4", name="camera-alpha", model="multic
         guide = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY).astype(np.float32) / 255
         m = cv2.ximgproc.guidedFilter(guide, prev, radius, eps) if radius else prev
         m = np.clip(m, 0, 1) ** gamma
+        if i % max(1, int(fps)) == 0:
+            low = m[m < 0.25]
+            haze.append(float(np.median(low)) if low.size else 0.0)
+        m = alpha_floor(m, floor)
         if erode:
             m = cv2.erode(m, kernel, iterations=erode)
         a8 = (m * 255 + 0.5).astype(np.uint8)
@@ -177,7 +193,8 @@ def person_matte(work, video="camera-hd.mp4", name="camera-alpha", model="multic
     jumps = [round(i / fps, 2) for i in np.where(np.abs(np.diff(cv)) > 0.04)[0]]
     stats = {"frames": n, "fps": fps, "coverage_mean": round(float(cv.mean()), 3),
              "coverage_min": round(float(cv.min()), 3), "coverage_max": round(float(cv.max()), 3),
-             "coverage_jumps_s": jumps[:40], "model": model, "classes": sorted(keep)}
+             "coverage_jumps_s": jumps[:40], "model": model, "classes": sorted(keep),
+             "background_haze": round(float(np.median(haze)), 3) if haze else None, "floor": floor}
     (Path(work) / "qa/matte-stats.json").write_text(json.dumps(stats, indent=1))
     return stats
 

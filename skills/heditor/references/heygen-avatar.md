@@ -227,6 +227,20 @@ the middle of a phrase, no word stressed on the wrong syllable.
   frames of the contact sheet; regenerate the line (shorter script, other look) instead of hiding a defect.
 - Pacing comes from the script: there are no retakes to trim, so `gaps` usually passes. Write for speech with the
   hook in the first words and follow "Writing the script for the voice" above.
+- **Scene seams (studio videos, one scene per sentence).** Every scene starts from the look's rest pose, so each seam
+  is a pose jump. List the seams (source time of the first frame of each new scene, measured on the frame difference)
+  in the work and pass them to the prepare: `prepare_cut(..., seams=[...])` moves each pause trim so its cut lands
+  exactly on the seam inside the pause, removing the same time. Without it, a seam that falls in a kept edge of a
+  pause becomes two jumps a few frames apart (trim cut, then pose reset); hiding the speaker for those frames reads as
+  a vanish/flicker and was rejected. Cover the single jump with a framing change on the cut.
+- **Joined renders.** When the source is spliced from several renders (scenes regenerated alone), check the audio at
+  every splice at 1 ms resolution: cutting a frame late can keep the first milliseconds of the next word (a click of
+  -25 dB in a -65 dB pause). Mute the burst in the source before the prepare. Also look at the first second of every
+  regenerated scene: a scene can open with 0.2-0.6 s of head dip, closed eyes and warped glasses in its silent
+  lead-in; start the splice after it.
+- **Cut-outs.** The speaker matte of a synthetic plate can keep a faint alpha over the whole background (the office
+  shelf showing through as a ghost over a graphic wall). `person_matte` removes it with `floor` (default 0.09); check
+  `background_haze` in `qa/matte-stats.json` and the matte sheet before building layers on top.
 
 ## Truth, consent and disclosure
 
