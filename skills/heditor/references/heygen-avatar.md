@@ -121,11 +121,14 @@ Recipe:
 4. Direct a visible hand gesture in the first scenes: the opening seconds decide retention, and an avatar that only
    moves its head there reads as stiff. A short opening scene with one strong gesture works better than a long scene
    with a vague prompt.
-5. Give the eyes life. A gaze fixed on one point for the whole speech is the clearest sign of an avatar (measured:
-   9 % of frames away from the central point, against 36 % in the person's real recording). Add a gaze cue to every
-   motion prompt and vary it across scenes: eye contact most of the time, and in about half the scenes a short glance
-   ("glancing down to the side as if thinking, then back to the camera", "glancing at the hand" when showing
-   something). `more_blinking` (outside `studio` only) made the avatar look down for most of a line, as if reading.
+5. Keep the eyes on the camera, alive like a conversation. Two failures give an avatar away: a gaze fixed on one point
+   for the whole speech, and talking while looking to the side. Prompting glances ("glancing aside", "glancing at the
+   hand") produced the second one: a scene spoke turned away for 8 s with the head at 30°. Give every scene a gesture +
+   "keeping eye contact with the camera" + natural head motion ("nodding naturally", "small natural head
+   movements"), and measure each scene before editing (eye-look blendshapes relative to the median and head yaw from
+   MediaPipe Face Landmarker): a scene that stays off camera for 0.6 s or more is regenerated alone. `more_blinking`
+   (outside `studio` only) made the avatar look down for most of a line, as if reading. A scene can also start with
+   0.2–0.6 s of a head dip and warped glasses in the silent lead-in: check the first second of each scene and trim it.
 6. Check the result: ASR word by word against the approved script, hands, teeth, eyes, gaze and mouth on enlarged frames.
    Every scene start resets the pose: plan a framing change or transition there. A defective scene is regenerated
    alone (one scene of the same recipe), never the whole video.

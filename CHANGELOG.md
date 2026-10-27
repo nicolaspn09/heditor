@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.14.3 — 2026-10-26
+- `references/heygen-avatar.md`: corrected gaze guidance. Prompted side glances made an avatar talk turned away (8 s at
+  30° of head yaw), which is as unnatural as a fixed stare; every scene now keeps eye contact with the camera with
+  natural head motion, each scene is measured (eye-look blendshapes and head yaw) and only a scene that leaves the
+  camera is regenerated; silent scene starts with a head dip and warped glasses are trimmed.
+
 ## 2.14.2 — 2026-10-26
 - `references/heygen-avatar.md`: natural gaze for avatar scenes. A fixed stare is the clearest sign of an avatar
   (9 % of frames away from the central point against 36 % in a real recording); every motion prompt gets a varied gaze
