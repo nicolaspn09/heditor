@@ -4,7 +4,7 @@ description: 'Use when the user wants to edit a talking-head, class, live or pod
 license: MIT
 metadata:
   author: PycodeBR (Felipe Azambuja)
-  version: 2.12.0
+  version: 2.13.0
   homepage: https://github.com/pycodebr/heditor
 ---
 
@@ -127,6 +127,12 @@ When there is no recording, only a script, the source can be the user's own HeyG
   estimate (credits or USD). Show it to the user; only after approval run it again with `--yes`. The file lands in
   `<work>/source/` with provenance in `<work>/avatar.json` (`synthetic: true`), then the normal workflow from
   `heditor new <work> <file>`.
+- Prepare the speech before spending: the approved `roteiro.txt` (caption spelling) and a spoken
+  `roteiro-fala.txt` with numbers as said, abbreviations expanded, a few `<break time="0.4s"/>` pauses and connected
+  sentences; recurring foreign terms, acronyms and names go into a HeyGen pronunciation glossary
+  (`heditor heygen glossaries`, `--glossary ID`), respelled the way the person really says them. After generating,
+  compare the transcript with the approved script word by word and regenerate any mispronounced line
+  (`references/heygen-avatar.md` § Writing the script for the voice).
 - The user approves every script; no claims, numbers or promises they did not approve; disclose AI use where a
   platform or law requires it.
 
@@ -171,7 +177,7 @@ Follow `references/workflow.md` step by step. Summary:
 - `references/gsap-craft.md` — GSAP plugins available offline, seek-safety rules (determinism hazards inside GSAP), SplitText/DrawSVG/MorphSVG in a render, SVG preparation with `heditor svg`.
 - `references/physics-3d.md` — physkit: baked Rapier physics, scene format, three.js page with bloom/depth of field, look values and framing that passed QA.
 - `references/technique-catalogue.md` — creator layouts (A/B page, morphs, insets, bands), illustrations, camera moves, caption systems, hooks and CTAs.
-- `references/heygen-avatar.md` — optional AI avatar source from the user's HeyGen account: `heditor heygen connect` (OAuth with subscription credits, `--remote` for servers, or API key), status, looks and voices, `heditor avatar` (estimate, approval, idempotent request, download, `avatar.json`), editing synthetic footage, consent and disclosure.
+- `references/heygen-avatar.md` — optional AI avatar source from the user's HeyGen account: `heditor heygen connect` (OAuth with subscription credits, `--remote` for servers, or API key), status, looks and voices, `heditor avatar` (estimate, approval, idempotent request, download, `avatar.json`), writing the script for the voice (pronunciation glossary, spoken script, pauses, natural flow, word-by-word check), editing synthetic footage, consent and disclosure.
 - `references/stock-media.md` — free Mixkit B-roll: search in English, orientation, quality, licence check, `stock.json` provenance, using clips in the page, what to avoid, Mixkit terms (no mass download) and why Pexels/Pixabay/Unsplash/Adobe Stock/Videezy are not built in.
 - `references/sound-design.md` — voice chain, mix targets, SFX vocabulary, music catalog and section design.
 - `references/captions-and-layout.md` — caption systems, contrast rules, safe zones, camera treatments.

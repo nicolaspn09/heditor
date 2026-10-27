@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.13.0 — 2026-10-26
+- **Pronunciation and natural speech for HeyGen avatar scripts.**
+  - `heditor avatar --glossary ID` passes a HeyGen brand glossary (`brand_glossary_id`): written terms are spoken
+    with the respelling you registered, while HeyGen's captions keep the written spelling. Only for synthesized speech
+    (`--script`/`--text`); with `--audio` it is refused, because an audio file is lip-synced as it is.
+  - `heditor avatar --speed 0.5-1.5` sets `voice_settings.speed` (omitted at 1.0, the voice's natural pace).
+  - `heditor heygen glossaries [--json]` lists the account's pronunciation glossaries with every term and respelling.
+  - Pause tags are checked before anything is sent: `<break time="0.4s"/>` in seconds; millisecond values, which
+    HeyGen rejects, stop the command. The duration estimate counts words without the tags, adds the pauses and
+    divides by the speed.
+  - The plan printed before a generation shows the glossary (or warns that terms will be read as written) and the
+    speed; `avatar.json` records `glossary_id` and `speed`.
+- `references/heygen-avatar.md` gains "Writing the script for the voice": approved script and spoken script, risky
+  words to mark (foreign terms, acronyms, names, numbers, handles, symbols, homographs), the glossary as the source of
+  truth (respelled the way the person speaks; `update` replaces the whole term list), what goes inline, punctuation
+  and sentence length for continuous speech, pauses, speed, an audio-only test of risky terms and a word-by-word check
+  of the generated video. `SKILL.md` and `README.md` point to it.
+- `test_heygen.py`: glossary and speed in the request and in `avatar.json`, refusal with `--audio` and with invalid
+  values, pause tags in seconds, duration with pauses and speed, glossary listing.
+
 ## 2.12.0 — 2026-10-26
 - **Optional AI avatar source from HeyGen: `heditor heygen` and `heditor avatar`.** Nothing is installed or required
   by default; `setup.sh` is unchanged and `heditor doctor` reports HeyGen as an optional warning only.

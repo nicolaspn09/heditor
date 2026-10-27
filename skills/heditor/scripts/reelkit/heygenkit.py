@@ -14,8 +14,10 @@ CLI (through `heditor`):
   heditor heygen disconnect [--yes]
   heditor heygen avatars [--json]                                    your avatar looks (ids, engines, orientation)
   heditor heygen voices [--json]                                     your cloned voices
+  heditor heygen glossaries [--json]                                 pronunciation glossaries and their terms
   heditor avatar <work> --look ID (--script FILE | --text "..." | --audio FILE) [--voice ID] [--engine v|iv|iii]
-                 [--aspect 9:16] [--resolution 1080p] [--motion "..."] [--title T] [--dry-run] [--yes]
+                 [--glossary ID] [--speed 0.5-1.5] [--aspect 9:16] [--resolution 1080p] [--motion "..."]
+                 [--title T] [--dry-run] [--yes]
   heditor avatar <work> --resume VIDEO_ID                            download a video that was still rendering
 """
 import argparse
@@ -659,6 +661,26 @@ def print_voices(voices):
               f"engines={engines or '?'}")
 
 
+def list_glossaries():
+    """Brand glossaries with their terms (term -> pronunciation respelling)."""
+    items = []
+    for glossary in _paged(["brand", "glossaries", "list"], 100):
+        gid = glossary.get("brand_glossary_id")
+        detail = cli_json(["brand", "glossaries", "get", gid]).get("data") or {} if gid else {}
+        items.append({**glossary, **detail})
+    return items
+
+
+def print_glossaries(glossaries):
+    if not glossaries:
+        print("no brand glossaries (create one with `heygen brand glossaries create`; see references/heygen-avatar.md)")
+    for glossary in glossaries:
+        terms = glossary.get("terms") or []
+        print(f"{glossary.get('brand_glossary_id')}  {glossary.get('name')!r}  terms={len(terms)}")
+        for term in terms:
+            print(f"    {term.get('term')}  ->  {term.get('pronunciation')}")
+
+
 # ---------------------------------------------------------------- estimate
 
 def probe_duration(path):
@@ -670,8 +692,23 @@ def probe_duration(path):
         raise HeyGenError(f"could not read the duration of {path}") from None
 
 
-def script_seconds(text):
-    return round(len(text.split()) / WORDS_PER_SECOND, 1)
+BREAK_TAG_RE = re.compile(r"<break\b[^>]*>", re.IGNORECASE)
+BREAK_SECONDS_RE = re.compile(r'<break\s+time="(\d+(?:\.\d+)?)s"\s*/>', re.IGNORECASE)
+
+
+def check_breaks(text):
+    """HeyGen pause tags must be <break time="0.35s"/> (seconds); milliseconds are rejected by the API."""
+    for tag in BREAK_TAG_RE.findall(text):
+        if not BREAK_SECONDS_RE.fullmatch(tag):
+            raise HeyGenError(f"pause tag {tag} not accepted: write it as <break time=\"0.4s\"/> (seconds, "
+                              "no milliseconds)", EXIT_USAGE)
+
+
+def script_seconds(text, speed=1.0):
+    """Estimated spoken duration: words at WORDS_PER_SECOND / speed, plus every <break time="Ns"/> pause."""
+    pauses = sum(float(s) for s in BREAK_SECONDS_RE.findall(text))
+    words = len(BREAK_TAG_RE.sub(" ", text).split())
+    return round(words / WORDS_PER_SECOND / (speed or 1.0) + pauses, 1)
 
 
 def estimate_cost(engine, avatar_type, seconds, billing):
@@ -697,7 +734,7 @@ def format_cost(cost):
 # ---------------------------------------------------------------- avatar video
 
 def build_request(look_id, engine, aspect, resolution, title, script=None, voice_id=None, audio_asset_id=None,
-                  motion=None):
+                  motion=None, glossary_id=None, speed=None):
     req = {"type": "avatar", "avatar_id": look_id, "engine": {"type": engine}, "aspect_ratio": aspect,
            "title": title, "caption": {"file_format": "srt"}}
     if resolution:
@@ -706,6 +743,10 @@ def build_request(look_id, engine, aspect, resolution, title, script=None, voice
         req["script"] = script
         if voice_id:
             req["voice_id"] = voice_id
+        if glossary_id:  # pronunciation respellings: audio only, captions keep the written term
+            req["brand_glossary_id"] = glossary_id
+        if speed and speed != 1.0:
+            req["voice_settings"] = {"speed": speed}
     else:
         req["audio_asset_id"] = audio_asset_id
     if motion:
@@ -827,10 +868,16 @@ def avatar(args):
         script = Path(args.script).read_text(encoding="utf-8").strip()
     elif args.text:
         script = args.text.strip()
+    if args.speed is not None and not 0.5 <= args.speed <= 1.5:
+        raise HeyGenError("--speed must be between 0.5 and 1.5 (1.0 is the voice's natural pace)", EXIT_USAGE)
+    if script is None and (args.glossary or args.speed is not None):
+        raise HeyGenError("--glossary and --speed apply to synthesized speech (--script/--text); "
+                          "an --audio file is lip-synced as it is", EXIT_USAGE)
     if script is not None:
         if not script:
             raise HeyGenError("the script is empty", EXIT_USAGE)
-        seconds = script_seconds(script)
+        check_breaks(script)
+        seconds = script_seconds(script, args.speed or 1.0)
         digest = hashlib.sha256(script.encode("utf-8")).hexdigest()
         voice_id = args.voice or look.get("default_voice_id")
         if not voice_id:
@@ -850,7 +897,8 @@ def avatar(args):
     cost = estimate_cost(engine, look.get("avatar_type"), seconds, billing)
     _print_plan(status, look, engine, voice_id, args, seconds, cost)
     preview = build_request(args.look, engine, args.aspect, args.resolution, title, script=script, voice_id=voice_id,
-                            audio_asset_id="<uploaded audio>" if script is None else None, motion=args.motion)
+                            audio_asset_id="<uploaded audio>" if script is None else None, motion=args.motion,
+                            glossary_id=args.glossary, speed=args.speed)
     if args.dry_run:
         print(json.dumps(preview, ensure_ascii=False, indent=2))
         return 0
@@ -869,7 +917,7 @@ def avatar(args):
         if not asset_id:
             raise HeyGenError("HeyGen did not return an asset_id for the audio")
     req = build_request(args.look, engine, args.aspect, args.resolution, title, script=script, voice_id=voice_id,
-                        audio_asset_id=asset_id, motion=args.motion)
+                        audio_asset_id=asset_id, motion=args.motion, glossary_id=args.glossary, speed=args.speed)
     key = idempotency_key(req, digest)
     rc, out, err = run_cli(["video", "create", "-d", "-", "--idempotency-key", key], stdin=json.dumps(req),
                            timeout=300)
@@ -881,7 +929,8 @@ def avatar(args):
         raise HeyGenError("HeyGen did not return a video_id")
     entry = {"provider": "heygen", "video_id": video_id, "status": "rendering", "look_id": args.look,
              "look_name": look.get("name"), "avatar_type": look.get("avatar_type"), "engine": engine,
-             "voice_id": voice_id, "input": "script" if script is not None else "audio",
+             "voice_id": voice_id, "glossary_id": args.glossary, "speed": args.speed,
+             "input": "script" if script is not None else "audio",
              "input_sha256": digest, "audio_file": str(Path(args.audio).resolve()) if args.audio else None,
              "aspect_ratio": args.aspect, "resolution": args.resolution, "billing": billing,
              "auth": status.get("auth"), "estimate_seconds": seconds, "estimated_cost": cost,
@@ -937,7 +986,10 @@ def _print_plan(status, look, engine, voice_id, args, seconds, cost):
           f"orientation={look.get('preferred_orientation') or '?'}")
     print(f"engine:   {engine}   aspect: {args.aspect}   resolution: {args.resolution or 'default'}")
     if voice_id:
-        print(f"voice:    {voice_id}")
+        print(f"voice:    {voice_id}" + (f"   speed: {args.speed}" if args.speed is not None else ""))
+    if args.script or args.text:
+        print(f"glossary: {args.glossary}" if args.glossary else
+              "glossary: none (terms are read as written; see heditor heygen glossaries)")
     source = "script" if (args.script or args.text) else f"audio {args.audio}"
     print(f"input:    {source}, ~{seconds:.1f} s")
     print(f"estimate: {format_cost(cost)}; HeyGen bills the real duration")
@@ -971,6 +1023,10 @@ def main(argv=None):
         parser.add_argument("--aspect", default="9:16", choices=["9:16", "16:9", "4:5", "5:4", "1:1", "auto"])
         parser.add_argument("--resolution", default="1080p", choices=["720p", "1080p", "4k"])
         parser.add_argument("--motion", help="motion prompt (engine v for video avatars)")
+        parser.add_argument("--glossary", metavar="ID",
+                            help="brand glossary id: pronunciation respellings for the synthesized speech "
+                                 "(heditor heygen glossaries); captions keep the written terms")
+        parser.add_argument("--speed", type=float, help="voice speed 0.5-1.5 (default: the voice's natural pace)")
         parser.add_argument("--title")
         parser.add_argument("--timeout", default="30m")
         parser.add_argument("--dry-run", action="store_true", help="show plan, estimate and request; spend nothing")
@@ -993,7 +1049,7 @@ def main(argv=None):
     st.add_argument("--json", action="store_true")
     dis = sub.add_parser("disconnect")
     dis.add_argument("--yes", action="store_true")
-    for name in ("avatars", "voices"):
+    for name in ("avatars", "voices", "glossaries"):
         sub.add_parser(name).add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     if args.cmd == "connect":
@@ -1007,6 +1063,13 @@ def main(argv=None):
         return 0 if status.get("connected") else EXIT_AUTH
     if args.cmd == "disconnect":
         return disconnect(args.yes)
+    if args.cmd == "glossaries":
+        items = list_glossaries()
+        if args.json:
+            print(json.dumps(items, ensure_ascii=False, indent=2))
+        else:
+            print_glossaries(items)
+        return 0
     items = list_looks() if args.cmd == "avatars" else list_voices()
     if args.json:
         print(json.dumps(items, ensure_ascii=False, indent=2))

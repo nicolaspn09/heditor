@@ -79,7 +79,7 @@ case "$cmd" in
            need_work "${1:-}"; "$PY" "$KIT/physkit.py" "$@" ;;
   stock)   # heditor stock search "<query>" [...] | heditor stock get <work> <#n|ref|url>  (Mixkit, no key)
            "$PY" "$KIT/stockkit.py" "$@" ;;
-  heygen)  # optional: heditor heygen connect|status|disconnect|avatars|voices (references/heygen-avatar.md)
+  heygen)  # optional: heditor heygen connect|status|disconnect|avatars|voices|glossaries (references/heygen-avatar.md)
            "$PY" "$KIT/heygenkit.py" "$@" ;;
   avatar)  # optional: heditor avatar <work> --look ID (--script F|--text T|--audio F) [...] -> AI avatar source video
            need_work "${1:-}"; "$PY" "$KIT/heygenkit.py" avatar "$@" ;;
@@ -148,9 +148,11 @@ AI avatar from your HeyGen account (optional; nothing else needs it; see referen
                                                          official HeyGen CLI if asked; heditor never sees the key
   heditor heygen status [--json]                         connection, billing mode, plan, credits or balance
   heditor heygen avatars|voices [--json]                 your avatar looks (ids, engines) and cloned voices
+  heditor heygen glossaries [--json]                     pronunciation glossaries (term -> respelling) for scripts
   heditor heygen disconnect [--yes]                      remove the stored HeyGen credential
   heditor avatar <work> --look ID (--script FILE|--text "..."|--audio FILE) [--voice ID] [--engine v|iv|iii]
-                 [--aspect 9:16] [--resolution 1080p] [--motion "..."] [--dry-run] [--yes]
+                 [--glossary ID] [--speed 0.5-1.5] [--aspect 9:16] [--resolution 1080p] [--motion "..."]
+                 [--dry-run] [--yes]
                                                          cost estimate + confirmation, render, download into
                                                          <work>/source, provenance in <work>/avatar.json
   heditor avatar <work> --resume VIDEO_ID                download a video that was still rendering

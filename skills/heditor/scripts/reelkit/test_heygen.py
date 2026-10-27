@@ -56,6 +56,11 @@ if args[:2] == ["voice", "list"]:
     out({"data": [{"voice_id": "voice1", "name": "Felipe", "language": "Portuguese", "gender": "male",
                    "type": "private", "available_engines": ["orca"], "support_pause": True,
                    "support_locale": False}], "has_more": False})
+if args[:3] == ["brand", "glossaries", "list"]:
+    out({"data": [{"brand_glossary_id": "gl1", "name": "Pronúncia"}], "has_more": False})
+if args[:3] == ["brand", "glossaries", "get"]:
+    out({"data": {"brand_glossary_id": args[3], "name": "Pronúncia",
+                  "terms": [{"term": "Python", "pronunciation": "páiton"}]}})
 if args[:2] == ["asset", "create"]:
     out({"data": {"asset_id": "asset1", "url": "https://x/a.wav", "mime_type": "audio/wav", "size_bytes": 10}})
 if args[:2] == ["video", "create"]:
@@ -281,6 +286,16 @@ def test_cost_estimates():
     assert "check the HeyGen dashboard" in heygenkit.format_cost(
         heygenkit.estimate_cost("avatar_iii", "digital_twin", 60, "subscription"))
     assert heygenkit.script_seconds("um dois tres quatro cinco seis sete oito nove dez " * 13) == 50.0
+    paused = 'Primeiro ponto. <break time="0.5s"/> Segundo ponto. <break time="1s"/>'
+    assert heygenkit.script_seconds(paused) == round(4 / heygenkit.WORDS_PER_SECOND + 1.5, 1)
+    assert heygenkit.script_seconds("um dois tres quatro cinco seis sete oito nove dez " * 13, 1.25) == 40.0
+
+
+def test_break_tags_must_use_seconds():
+    heygenkit.check_breaks('Olá. <break time="0.35s"/> Tudo bem?')
+    with pytest.raises(heygenkit.HeyGenError) as exc:
+        heygenkit.check_breaks('Olá. <break time="350ms"/> Tudo bem?')
+    assert exc.value.code == heygenkit.EXIT_USAGE
 
 
 # ---------------------------------------------------------------- avatar video
@@ -334,6 +349,45 @@ def test_avatar_from_audio_uploads_it(fake, tmp_path, monkeypatch, tiny_mp4):
     assert entry["input"] == "audio" and entry["estimated_cost"]["unit"] == "usd"
 
 
+def test_avatar_glossary_and_speed_go_into_the_request(fake, tmp_path, capsys):
+    script = tmp_path / "roteiro.txt"
+    script.write_text('Eu uso Python com o Hermes. <break time="0.4s"/> E faço o deploy.\n', encoding="utf-8")
+    assert _avatar(tmp_path / "w", "--look", "look1", "--script", str(script), "--glossary", "gl1",
+                   "--speed", "1.05", "--yes") == 0
+    req = json.loads(next(c for c in fake() if c["args"][:2] == ["video", "create"])["stdin"])
+    assert req["brand_glossary_id"] == "gl1" and req["voice_settings"] == {"speed": 1.05}
+    assert '<break time="0.4s"/>' in req["script"]
+    entry = json.loads((tmp_path / "w" / "avatar.json").read_text())["generations"][0]
+    assert entry["glossary_id"] == "gl1" and entry["speed"] == 1.05
+    assert "glossary: gl1" in capsys.readouterr().out
+
+
+def test_avatar_without_glossary_says_so(fake, tmp_path, capsys):
+    assert _avatar(tmp_path / "w", "--look", "look1", "--text", "Olá.", "--dry-run") == 0
+    out = capsys.readouterr().out
+    assert "glossary: none" in out and "brand_glossary_id" not in out and "voice_settings" not in out
+
+
+def test_avatar_glossary_and_speed_reject_audio_and_bad_values(fake, tmp_path):
+    audio = tmp_path / "voz.wav"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "sine=frequency=220:duration=1",
+                    str(audio)], check=True)
+    with pytest.raises(heygenkit.HeyGenError) as exc:
+        _avatar(tmp_path / "w", "--look", "look1", "--audio", str(audio), "--glossary", "gl1", "--dry-run")
+    assert exc.value.code == heygenkit.EXIT_USAGE
+    with pytest.raises(heygenkit.HeyGenError):
+        _avatar(tmp_path / "w", "--look", "look1", "--text", "Olá.", "--speed", "2", "--dry-run")
+    with pytest.raises(heygenkit.HeyGenError):
+        _avatar(tmp_path / "w", "--look", "look1", "--text", 'Olá. <break time="300ms"/>', "--dry-run")
+    assert not any(c["args"][:2] == ["video", "create"] for c in fake())
+
+
+def test_glossaries_list_terms(fake, capsys):
+    assert heygenkit.main(["glossaries"]) == 0
+    out = capsys.readouterr().out
+    assert "gl1" in out and "Python  ->  páiton" in out
+
+
 def test_idempotency_key_is_stable():
     req = heygenkit.build_request("look1", "avatar_v", "9:16", "1080p", "t", script="Olá", voice_id="v")
     assert heygenkit.idempotency_key(req, "abc") == heygenkit.idempotency_key(dict(req), "abc")
@@ -382,4 +436,4 @@ def test_cli_help_mentions_the_optional_commands():
     script = Path(__file__).resolve().parents[1] / "heditor"
     out = subprocess.run(["bash", str(script), "help"], capture_output=True, text=True,
                          env=dict(os.environ, HEDITOR_HOME="/nonexistent")).stdout
-    assert "heditor heygen connect" in out and "heditor avatar <work>" in out
+    assert "heditor heygen connect" in out and "heditor avatar <work>" in out and "glossaries" in out

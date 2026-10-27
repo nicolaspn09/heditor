@@ -47,6 +47,7 @@ Rules for agents:
 ```bash
 heditor heygen avatars                     # your looks: id, type, orientation, engines (v, iv, iii), default voice
 heditor heygen voices                      # your cloned voices
+heditor heygen glossaries                  # pronunciation glossaries (term -> respelling)
 heditor avatar cortes/c01 --look <id> --script roteiro.txt --dry-run   # plan, estimate and request; spends nothing
 heditor avatar cortes/c01 --look <id> --script roteiro.txt              # asks for confirmation, then renders
 heditor new cortes/c01 cortes/c01/source/avatar-<video_id>.mp4          # then the normal workflow
@@ -55,7 +56,8 @@ heditor new cortes/c01 cortes/c01/source/avatar-<video_id>.mp4          # then t
 Inputs (exactly one): `--script FILE`, `--text "..."` (the look's default voice, or `--voice ID`) or `--audio FILE`
 (mp3/wav lip-synced as is; for example the person's own recording, so only the picture is synthetic).
 
-Options: `--engine v|iv|iii` (default `v` when the look supports it), `--aspect 9:16` (default; also 16:9, 4:5, 5:4,
+Options: `--glossary ID` (pronunciation glossary for the synthesized speech, see below), `--speed 0.5-1.5`,
+`--engine v|iv|iii` (default `v` when the look supports it), `--aspect 9:16` (default; also 16:9, 4:5, 5:4,
 1:1, auto), `--resolution 1080p` (720p, 4k for Avatar III twins), `--motion "..."` (body and hand motion; engine v for
 video avatars), `--title`, `--timeout 30m`, `--yes`, `--resume VIDEO_ID`.
 
@@ -77,6 +79,90 @@ What happens:
    estimate, file SHA-256, size, duration, timestamps and `synthetic: true`. If the render outlives `--timeout`, the
    entry stays `rendering` and `heditor avatar <work> --resume <video_id>` downloads it later (exit code 4 meanwhile).
 
+## Writing the script for the voice (pronunciation and natural speech)
+
+The synthesized voice reads exactly what is written, letter by letter and mark by mark. A foreign term read with the
+wrong phonetics, a number read as digits or a script cut into three-word sentences is what makes a clone sound like a
+robot. Prepare the speech before any credit is spent.
+
+**Two texts, one meaning.**
+
+- `roteiro.txt` is the approved script, written normally. It is what the person approves, and it is the spelling of
+  the captions (`words-reviewed.json`).
+- `roteiro-fala.txt` is the spoken version sent to `--script`. It has the same words and the same meaning, prepared
+  for the voice: numbers written as they are said, abbreviations expanded, pauses marked and, only where no glossary
+  covers a term, respellings. Show the diff between the two; it must change pronunciation only, never content.
+
+**1. Mark every risky word** before generating:
+
+- foreign terms inside the script's language (tool names, brands, technical jargon in English inside a Portuguese
+  script);
+- acronyms: decide whether each one is spelled letter by letter or read as a word, the way the person says it;
+- names of products, people and places;
+- numbers, money, dates, times, percentages, versions, multipliers and ratios (`R$ 197`, `2026`, `30%`, `v2.1`,
+  `12x`, `9:16`);
+- handles, URLs and e-mail addresses;
+- symbols and abbreviations (`/`, `&`, `+`, `→`, `#`, `@`, `etc.`, `ex.`, chat shorthand), emojis, markdown,
+  parentheses and quotes;
+- homographs whose pronunciation depends on the meaning.
+
+**2. Use a pronunciation glossary for recurring terms.** A HeyGen brand glossary maps a written term to the respelling
+handed to the synthesizer. It changes the audio only: HeyGen's captions keep the written term, so the approved
+spelling survives. It applies to `--script`/`--text`, never to an `--audio` file.
+
+```bash
+heditor heygen glossaries                         # existing glossaries and their terms
+heygen brand glossaries create --request-schema   # fields: name, terms[{term, pronunciation, pronunciation_language}]
+heygen brand glossaries update <id> -d -          # terms is a FULL REPLACE: send every existing term + the new ones
+heditor avatar <work> --look ID --script roteiro-fala.txt --glossary <id> --dry-run
+```
+
+- `update` replaces the whole `terms` list: read the glossary (`heygen brand glossaries get <id>`), keep every entry
+  with its `pronunciation_language`, add the new ones and send the full list, or the old terms are lost.
+
+- Write each respelling in the phonetics of the voice's language, the way the person really says the term: take it
+  from their own recordings or ask them. Never assume the original-language pronunciation if they say it the local
+  way.
+- Scope a respelling to one language (`pronunciation_language` with scope `specific` and a code such as `pt`) when it
+  only makes sense in that language.
+- Keep one glossary per account as the single source of truth and record its id in DESIGN.md.
+
+**3. Write in the spoken script what a glossary cannot cover.** Numbers as said ("cento e noventa e sete reais",
+"dois mil e vinte e seis", "doze vezes", "nove por dezesseis", "versão dois ponto um", "trinta por cento"); handles
+and URLs as said; abbreviations expanded; emojis, symbols, markdown, parentheses and quotes removed. A one-off term
+can be respelled inline; then HeyGen's `.srt` and the ASR show the respelling, and `words-reviewed.json` gets the
+approved spelling back (timings untouched).
+
+**4. Write for continuous speech.** The voice takes its intonation from the punctuation.
+
+- One idea per sentence, about 8 to 20 words, linked with ordinary connectives ("e", "mas", "porque", "então").
+  Strings of very short sentences read staccato and robotic; a 40-word sentence with no comma reads breathless.
+- Commas where the person would breathe, a period where the voice should fall, a question mark only on real
+  questions (it raises the intonation).
+- Avoid ellipses (unpredictable long pauses), dashes, colons and semicolons in the middle of speech, parentheses and
+  chains of exclamation marks.
+- One paragraph per thought, never one line per sentence: line and paragraph breaks can turn into long pauses.
+- Pauses: `<break time="0.4s"/>`, in seconds (milliseconds are rejected by HeyGen and by heditor), 0.2 to 0.6 s,
+  only at real beats such as after the hook or before a reveal. Never stack them.
+- Spoken register: first person, the contractions and fillers the person really uses (in Brazilian Portuguese,
+  "pra", "tá", "né", in moderation), no written-only vocabulary.
+- Keep the voice at its natural pace. `--speed` (0.5 to 1.5) only after listening, and small steps (0.95 to 1.05);
+  beyond that it sounds synthetic.
+
+**5. Test the risky terms before the video.** Generate a short audio sample with the cloned voice instead of a whole
+video: `heygen voice speech create` (read `--request-schema`; it takes the respelling inline, has no glossary field
+and uses HeyGen's speech quota, so compare the balance before and after the first test). Listen to it, then add the
+respellings that worked to the glossary.
+
+**6. Check the generated video word by word.** Transcribe it (`heditor words` after `heditor new`, or `heditor
+transcribe`) and compare with the approved script. Every word the ASR gets wrong is a candidate mispronunciation:
+listen to that passage. Fix it in the glossary or the spoken script and regenerate that line (a shorter scene)
+instead of hiding it under captions or music. Listen to the whole take once for flow: no robotic rhythm, no pause in
+the middle of a phrase, no word stressed on the wrong syllable.
+
+`heditor avatar` records `glossary_id` and `speed` in `avatar.json` and saves the spoken script next to the video
+(`source/avatar-<video_id>.txt`).
+
 ## Editing an avatar video
 
 - The avatar file is a source like any recording: `heditor new`, `prepare` (one block covering the speech, crop if
@@ -85,8 +171,8 @@ What happens:
 - Choose layouts that are kind to synthetic faces: cut-outs and screens in front of the speaker (`reacao`, `camadas`,
   `manchete`), b-roll and set pieces on the strongest lines. Inspect teeth, eyes, hands and lip sync on enlarged
   frames of the contact sheet; regenerate the line (shorter script, other look) instead of hiding a defect.
-- Pacing comes from the script: there are no retakes to trim, so `gaps` usually passes; long sentences read flat.
-  Write for speech, short clauses, the hook in the first words.
+- Pacing comes from the script: there are no retakes to trim, so `gaps` usually passes. Write for speech with the
+  hook in the first words and follow "Writing the script for the voice" above.
 
 ## Truth, consent and disclosure
 
