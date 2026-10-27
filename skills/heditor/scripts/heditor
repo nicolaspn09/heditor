@@ -79,6 +79,10 @@ case "$cmd" in
            need_work "${1:-}"; "$PY" "$KIT/physkit.py" "$@" ;;
   stock)   # heditor stock search "<query>" [...] | heditor stock get <work> <#n|ref|url>  (Mixkit, no key)
            "$PY" "$KIT/stockkit.py" "$@" ;;
+  heygen)  # optional: heditor heygen connect|status|disconnect|avatars|voices (references/heygen-avatar.md)
+           "$PY" "$KIT/heygenkit.py" "$@" ;;
+  avatar)  # optional: heditor avatar <work> --look ID (--script F|--text T|--audio F) [...] -> AI avatar source video
+           need_work "${1:-}"; "$PY" "$KIT/heygenkit.py" avatar "$@" ;;
   styles)  ls "$SKILL_DIR/references/styles" | sed 's/\.md$//' | grep -v INDEX ;;
   formats) "$PY" "$KIT/long_cli.py" formats ;;
   long)    # long-form pipeline (classes, lives, YouTube) in any format profile; see references/long-form.md
@@ -137,6 +141,19 @@ Stock video / B-roll from Mixkit (free licence, no account or key; see reference
   heditor stock get <work> <#n|mixkit:video:ID|page-url> [--quality 1080|4k|best|720] [--as name]
                                                          licence checked on the page, file into
                                                          <work>/composition/assets/stock, provenance in <work>/stock.json
+
+AI avatar from your HeyGen account (optional; nothing else needs it; see references/heygen-avatar.md):
+  heditor heygen connect [--oauth|--remote|--api-key]    interactive, by the account owner: HeyGen account (OAuth,
+                                                         subscription credits) or API key (API wallet); installs the
+                                                         official HeyGen CLI if asked; heditor never sees the key
+  heditor heygen status [--json]                         connection, billing mode, plan, credits or balance
+  heditor heygen avatars|voices [--json]                 your avatar looks (ids, engines) and cloned voices
+  heditor heygen disconnect [--yes]                      remove the stored HeyGen credential
+  heditor avatar <work> --look ID (--script FILE|--text "..."|--audio FILE) [--voice ID] [--engine v|iv|iii]
+                 [--aspect 9:16] [--resolution 1080p] [--motion "..."] [--dry-run] [--yes]
+                                                         cost estimate + confirmation, render, download into
+                                                         <work>/source, provenance in <work>/avatar.json
+  heditor avatar <work> --resume VIDEO_ID                download a video that was still rendering
 
 Motion assets (see references/gsap-craft.md and references/physics-3d.md):
   heditor svg <in.svg> [out.svg] [static|draw|morph]     SVGO clean-up for DrawSVG/MorphSVG + visual diff check

@@ -72,6 +72,12 @@ brand = HOME / "brand.json"
 handle = json.loads(brand.read_text()).get("handle", "") if brand.exists() else ""
 check("brand.json", brand.exists() and handle not in ("", "@yourhandle"),
       f"edit {brand} (name, handle, colors, logo)", required=False)
+# Optional AI avatar (heditor heygen connect). Offline check only: CLI present and a credential stored or in env.
+heygen_cli = os.environ.get("HEYGEN_BIN") or shutil.which("heygen") or (
+    str(Path("~/.local/bin/heygen").expanduser()) if Path("~/.local/bin/heygen").expanduser().exists() else "")
+heygen_cred = bool(os.environ.get("HEYGEN_API_KEY")) or Path("~/.heygen/credentials").expanduser().exists()
+check("HeyGen avatar (optional)", bool(heygen_cli) and heygen_cred,
+      "not connected; only for AI avatar videos: heditor heygen connect", required=False)
 try:
     v = subprocess.run(["npx", "--yes", "hyperframes@0.8.147", "--version"], capture_output=True, text=True, timeout=180)
     check("hyperframes@0.8.147", v.returncode == 0, v.stderr[-200:])

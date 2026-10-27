@@ -117,6 +117,8 @@ Ferramentas de movimento: os plugins do GSAP (SplitText, DrawSVG, MorphSVG, Moti
 
 Vídeos de banco (B-roll) grátis do [Mixkit](https://mixkit.co/free-stock-video/), sem conta e sem chave de API: `heditor stock search "server room" --orientation portrait` lista os clipes (busca em inglês) e `heditor stock get <work> '#2'` baixa o escolhido para `composition/assets/stock/`, depois de conferir na página do clipe a licença gratuita (Mixkit Stock Video Free License, que libera anúncios, redes sociais e YouTube sem crédito obrigatório). A origem de cada arquivo fica registrada em `<work>/stock.json`. Veja [`stock-media.md`](skills/heditor/references/stock-media.md).
 
+Vídeo com o seu avatar da HeyGen (opcional): quando só existe o roteiro, sem gravação, a fonte do corte pode ser o seu gêmeo digital da HeyGen falando o texto que você aprovou. Conecte a sua conta uma vez com `heditor heygen connect`, um assistente interativo que oferece dois caminhos: a conta HeyGen (OAuth), em que os vídeos usam os créditos da sua assinatura, ou uma chave de API, cobrada na carteira pré-paga da API. Em servidor ou via SSH, o assistente mostra um link para você aprovar no navegador do seu computador e pede o endereço de retorno. A credencial fica com o CLI oficial da HeyGen, e o heditor não lê nem guarda a sua chave. Depois, `heditor avatar <work> --look <id> --script roteiro.txt` mostra a estimativa de custo em créditos ou em dólar, pede confirmação, baixa o vídeo para `<work>/source/` e registra a origem em `<work>/avatar.json`. Daí em diante, a edição segue o fluxo normal. Nada disso é instalado ou exigido por padrão. Veja [`heygen-avatar.md`](skills/heditor/references/heygen-avatar.md).
+
 Detalhes de cada um em [`skills/heditor/references/styles/`](skills/heditor/references/styles/).
 
 ## Modo de vídeo longo (aulas, lives, YouTube)
@@ -243,6 +245,17 @@ heditor lint cortes/c01 && heditor preview cortes/c01 0.1,2,5,9,14,20 && heditor
 heditor render cortes/c01 && heditor finalize cortes/c01 c01-1080x1920.mp4 && heditor asr-check cortes/c01
 ```
 
+Avatar da HeyGen (opcional):
+
+```bash
+heditor heygen connect                          # você mesmo, no seu terminal: conta HeyGen (OAuth) ou chave de API
+heditor heygen status                           # conta, forma de cobrança, plano e créditos ou saldo
+heditor heygen avatars                          # seus looks: id, orientação e motores (v, iv, iii)
+heditor avatar cortes/a01 --look <id> --script roteiro.txt --dry-run   # estimativa, sem gastar nada
+heditor avatar cortes/a01 --look <id> --script roteiro.txt             # confirma, gera e baixa para source/
+heditor new cortes/a01 cortes/a01/source/avatar-<video_id>.mp4         # e segue o fluxo normal
+```
+
 ## Requisitos
 
 - Linux ou macOS (Windows via WSL2), 4 núcleos e 8 GB de RAM recomendados.
@@ -271,6 +284,7 @@ skills/heditor/
 - Fontes: [Google Fonts](https://github.com/google/fonts) (SIL OFL 1.1). Ícones: [Lucide](https://lucide.dev) (ISC).
 - Trilhas e efeitos: [Mixkit](https://mixkit.co/license/) (Free License). Os arquivos **não** estão neste repositório; o setup baixa cada um do CDN oficial para a sua máquina.
 - Vídeos de banco: [Mixkit](https://mixkit.co/license/#videoFree) (Stock Video Free License), baixados um a um sob demanda por `heditor stock get`, nunca em massa e nunca redistribuídos aqui.
+- Avatar (opcional): o [CLI da HeyGen](https://developers.heygen.com/cli) é instalado só se você pedir, pelo instalador oficial, e o uso segue os termos da sua conta HeyGen. O heditor não cria avatares nem clona vozes.
 - Tabela completa em [`references/licenses.md`](skills/heditor/references/licenses.md).
 
 O heditor não publica nada em redes sociais sozinho e não usa logos ou marcas de terceiros nos estilos de homenagem.
@@ -293,6 +307,7 @@ Issues e PRs são bem-vindos: novos estilos (com a ficha completa em `references
 - **Long-form mode:** `heditor new --long` + `heditor long ...`: chunked resumable ASR, a reviewable EDL proposal that removes dead pauses, false starts, repetitions and fillers without cutting words, screen + camera layouts (PiP, screen zoom, speaker, side by side), chapters (cards + YouTube timestamps), burned captions and SRT/VTT, lower thirds, intro and end cards (Follow or YouTube Subscribe), every named style as a *style pack*, creative set pieces at key moments with a retention cadence per kind (class, live, YouTube), a segmented resumable render with one continuous master audio, and a long-form QA report (loudness, sync against the source, sampled ASR, chapters, segment seams). See [`long-form.md`](skills/heditor/references/long-form.md).
 - **Hook tests and raw takes:** `heditor triage` labels the chunks of a raw teleprompter take (keep, retake, false start, aside to the editor, noise), reads the speaker breaking the fourth wall as notes to the editor (cut, redo, marker, editing note), flags stumbles, self-corrections, forbidden phrases and recording failures (clipping, knocks, duplicated frames, the set moving between takes) before cutting; `heditor splice` joins a new rendered opening to a video that is already running, body untouched (audio decoded whole and cut by sample, one encode, report proving the body identical). See [`hook-variants.md`](skills/heditor/references/hook-variants.md).
 - **Free stock B-roll:** `heditor stock search|get` finds and downloads Mixkit clips (no account, no API key), checks the Mixkit Stock Video Free License on the clip page and records provenance in `<work>/stock.json`. See [`stock-media.md`](skills/heditor/references/stock-media.md).
+- **Optional AI avatar source (HeyGen):** `heditor heygen connect` is an interactive assistant that connects your own HeyGen account by OAuth (videos use your subscription credits; on servers it prints a link and asks for the return address) or by API key (prepaid API wallet). The credential stays with the official HeyGen CLI. `heditor avatar <work> --look ID --script FILE` shows a cost estimate, asks for confirmation, downloads the twin video into `<work>/source/` and records provenance in `<work>/avatar.json`; the edit then follows the normal workflow. Nothing is installed or required by default. See [`heygen-avatar.md`](skills/heditor/references/heygen-avatar.md).
 - **Pipeline:** word-timed ASR (faster-whisper), frame-accurate cuts, voice chain, HyperFrames (HTML + GSAP) composition, voice-first mix profiles (`voice` for organic cuts, `presence` for ads and creative mode, with a music presence floor) at −14 LUFS, and automatic QA (lint, vision-reviewed previews, tests, pixel safe-margin, loudness/true peak, ASR of the final mix, 40-frame contact sheet).
 
 **Install:** `curl -fsSL https://raw.githubusercontent.com/pycodebr/heditor/main/install.sh | bash`, or `npx skills add pycodebr/heditor -g` followed by `bash <skill>/scripts/setup.sh`. Then edit `~/.heditor/brand.json` and ask your agent: *"edit this video in creative mode"*.

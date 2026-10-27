@@ -1,5 +1,35 @@
 # Changelog
 
+## 2.12.0 — 2026-10-26
+- **Optional AI avatar source from HeyGen: `heditor heygen` and `heditor avatar`.** Nothing is installed or required
+  by default; `setup.sh` is unchanged and `heditor doctor` reports HeyGen as an optional warning only.
+  - `heditor heygen connect` is an interactive assistant (Portuguese or English, from `brand.json` `lang` or
+    `HEDITOR_LANG`) run by the account owner. It installs the official HeyGen CLI when the user accepts (official
+    installer, checksum verified) and offers two ways to connect: the HeyGen account by OAuth, billed to the premium
+    credits of the subscription, or an API key, billed to the prepaid API wallet and typed into the HeyGen CLI's hidden
+    prompt. On a desktop OAuth opens the browser; on a server or over SSH (`--remote`) the HeyGen CLI waits on a
+    loopback port inside a pseudo-terminal, heditor prints the authorize link, the user approves on any computer and
+    pastes the return address, which heditor validates (port, path, `state`) and delivers locally. `--device` keeps
+    HeyGen's device-code login available for when HeyGen enables it (it answered `invalid_request` at release).
+    Without a terminal the command refuses and prints the commands the user should run.
+  - `heditor heygen status [--json]` shows the connection type, account, plan, premium credits or wallet balance and
+    warns when `HEYGEN_API_KEY` overrides a stored OAuth login; `disconnect`, `avatars` (look ids, type,
+    orientation, supported engines, default voice) and `voices` (cloned voices).
+  - `heditor avatar <work> --look ID (--script FILE | --text "..." | --audio FILE)` checks the engine against the
+    look (`v` by default when supported, `iv`, `iii`), estimates duration and cost in the unit of the connection
+    (credits on OAuth, USD on the API wallet, published rates of October 2026), asks for confirmation (`--yes` only
+    after approval; `--dry-run` spends nothing), uploads the audio, requests the video with an idempotency key,
+    polls with backoff, downloads it with HeyGen's sidecar captions into `<work>/source/` and records provenance in
+    `<work>/avatar.json` (look, engine, voice, input hash, billing, estimate, SHA-256, size, `synthetic: true`).
+    `--resume VIDEO_ID` finishes a render that outlived `--timeout`.
+  - heditor never reads, prints, stores or passes a HeyGen key on a command line; the credential stays with the
+    HeyGen CLI (`~/.heygen/credentials`) or `HEYGEN_API_KEY`.
+- New reference `references/heygen-avatar.md`: connecting, billing modes, the remote OAuth flow, rules for agents
+  (never connect for the user, approval before `--yes`), editing synthetic footage, consent and disclosure.
+- `SKILL.md`, `README.md` and `references/licenses.md` document the optional feature; CI runs `test_heygen.py` (fake
+  HeyGen CLI: status in both billing modes, connect menu and remote OAuth callback, approval gate, request body,
+  idempotency, download and provenance, resume after timeout; no network).
+
 ## 2.11.0 — 2026-10-24
 - **Free stock B-roll from Mixkit: `heditor stock search` and `heditor stock get`.** No account, no API key, nothing
   to configure.
