@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.14.1 — 2026-10-26
+- `references/heygen-avatar.md`: the per-sentence recipe now generates with the person's voice selected (`script` +
+  `voice_id` per studio scene, the engine saved on the voice, glossary at the top level) and explains why uploading
+  audio synthesized elsewhere or forcing an engine is wrong for a person's own avatar: no voice selected in HeyGen,
+  no glossary, possibly another engine that sounds unlike the trained voice, and engine-specific tags read aloud.
+  Risky terms are tested first in a 10–15 s video on the cheapest engine with the same voice. `SKILL.md` follows.
+
 ## 2.14.0 — 2026-10-26
 - **The person's official voice in every avatar video.** `heditor avatar` takes the voice from `--voice`, else from
   `~/.heditor/brand.json` `"heygen": {"voice_id": ...}` (or `HEDITOR_HEYGEN_VOICE`), else from the look's default

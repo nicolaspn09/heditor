@@ -4,7 +4,7 @@ description: 'Use when the user wants to edit a talking-head, class, live or pod
 license: MIT
 metadata:
   author: PycodeBR (Felipe Azambuja)
-  version: 2.14.0
+  version: 2.14.1
   homepage: https://github.com/pycodebr/heditor
 ---
 
@@ -129,7 +129,8 @@ When there is no recording, only a script, the source can be the user's own HeyG
   `heditor new <work> <file>`.
 - The person's own cloned voice, always: set it once in `~/.heditor/brand.json` (`"heygen": {"voice_id": "..."}`);
   `heditor avatar` refuses a look default that is not one of the account's cloned voices (HeyGen can return a stock
-  voice for photo looks). For per-sentence gestures and approved audio, follow § Audio first in the reference.
+  voice for photo looks). Generate with `script` + that `voice_id` (the engine saved on the voice), never with
+  uploaded audio synthesized elsewhere; per-sentence gestures: § One motion prompt per sentence in the reference.
 - Prepare the speech before spending: the approved `roteiro.txt` (caption spelling) and a spoken
   `roteiro-fala.txt` with numbers as said, abbreviations expanded, a few `<break time="0.4s"/>` pauses and connected
   sentences; recurring foreign terms, acronyms and names go into a HeyGen pronunciation glossary

@@ -92,32 +92,38 @@ voice in the person's mouth.
   came from.
 - Without a brand voice, `heditor avatar` uses the look's default voice only when it is one of the account's cloned
   voices; otherwise it stops and asks for `--voice`.
-- When you call the HeyGen CLI directly (speech first, studio scenes), always pass the official `voice_id`.
+- When you call the HeyGen CLI directly (studio scenes, tests), always pass the official `voice_id` and never
+  replace the voice with uploaded audio synthesized elsewhere.
 
-## Audio first and one motion prompt per sentence (direct HeyGen CLI)
+## One motion prompt per sentence, with the person's voice selected (direct HeyGen CLI)
 
-For the most control over pronunciation, pace and gestures, generate and approve the voice before any video exists,
-then let the avatar lip-sync that exact audio:
+The person's configured voice is the one selected in the generation: `script` + `voice_id` per scene, with no
+`voice_settings.engine_settings` override, so HeyGen uses the engine saved on that voice (the one the person trained
+and listens to in HeyGen). Two shortcuts look tempting and are wrong for a person's own avatar:
 
-1. `heygen voice speech create -d <json>` per block of the spoken script, with the official `voice_id` (read
-   `--request-schema`). A short sample cost about one credit in October 2026; compare the balance before and after.
-   With the `elevenlabs` engine and `settings.model_id: eleven_v3`, a delivery tag at the start of a block
-   (`[serious]`, `[calm]`, `[thoughtful]`, `[warmly]`, `[confident]`, `[excited]`) shapes the intonation and is not
-   spoken. Check each block with ASR: repeated short words can be swallowed (a spoken code "zero cinco um um" lost a
-   digit; commas between the digits fixed it), and a fast block can be split with breathing pauses inserted in the
-   real silence between sentences (never by cutting audio).
-2. Join the approved blocks into one master audio and slice it in the middle of pauses into scenes of 3 to 10 s, one
-   gesture idea each.
-3. `heygen asset create --file sNN.wav` per scene, then one `type: studio` request with an `avatar_video` scene per
-   slice: the same look, the same engine (`avatar_v` with `reference_look_id` set to the person's digital twin) and a
-   `motion_prompt` per scene ("[body part] + [action] + [emotion]", one gesture, under two clauses). `more_blinking`
-   is rejected in studio videos. The scenes are concatenated without gaps and the video's audio is the master.
-   Direct a visible hand gesture in the first scenes: the opening seconds decide retention, and an avatar that
-   only moves its head there reads as stiff. A short opening scene with one strong gesture works better than a long
-   scene with a vague prompt.
-4. Verify the downloaded file against the master (envelope correlation, offset per scene), then inspect hands, teeth,
-   eyes and mouth on enlarged frames. Every scene start resets the pose: plan a framing change or transition there.
-   A defective or gesture-less scene is regenerated alone (one scene of the same studio recipe), never the whole video.
+- **Uploading audio synthesized elsewhere.** The video then has no voice selected in HeyGen, the glossary does not
+  apply, and the audio may come from another engine (`voice speech create` refuses some saved engines and only offers
+  `heygen_voice`, `starfish`, `elevenlabs`...), so it can sound unlike the voice the person knows. Use `--audio` only
+  for the person's own recording.
+- **Forcing an engine** (for example ElevenLabs v3 with delivery tags such as `[serious]`). Tags only work on that
+  engine; on any other engine they are read aloud.
+
+Recipe:
+
+1. Split the spoken script into scenes of 3 to 10 s at sentence ends or commas, one gesture idea each.
+2. Test the risky terms first with the same voice and the same saved engine: a 10–15 s `type: avatar` video on the
+   cheapest engine (`avatar_iii` on a photo look cost 2 credits in October 2026) with the terms in context, then ASR.
+3. One `type: studio` request: an `avatar_video` scene per slice with `script`, the official `voice_id`, the same look,
+   `engine: {"type": "avatar_v", "reference_look_id": "<the person's digital twin>"}` and a `motion_prompt`
+   ("[body part] + [action] + [emotion]", one gesture, under two clauses); `brand_glossary_id` at the top level applies
+   to every scripted scene. `more_blinking` is rejected in studio videos. Validate against `--request-schema` and send
+   with an idempotency key.
+4. Direct a visible hand gesture in the first scenes: the opening seconds decide retention, and an avatar that only
+   moves its head there reads as stiff. A short opening scene with one strong gesture works better than a long scene
+   with a vague prompt.
+5. Check the result: ASR word by word against the approved script, hands, teeth, eyes and mouth on enlarged frames.
+   Every scene start resets the pose: plan a framing change or transition there. A defective scene is regenerated
+   alone (one scene of the same recipe), never the whole video.
 
 ## Writing the script for the voice (pronunciation and natural speech)
 
